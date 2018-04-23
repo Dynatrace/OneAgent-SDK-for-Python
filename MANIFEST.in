@@ -1,0 +1,5 @@
+prune test
+graft src
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__/*

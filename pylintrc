@@ -1,0 +1,17 @@
+[MASTER]
+ignore-patterns=six
+ignore=wrapt
+load-plugins=pylint.extensions.docparams
+
+[BASIC]
+const-rgx=[a-z0-9_]{3,30}|[A-Z0-9_]{3,30}
+include-naming-hint=y
+good-names=i,j,e,_
+
+[FORMAT]
+max-line-length=80
+
+[TYPECHECK]
+ignored-classes=oneagent._impl.native.sdkctypesiface.SDKDllInterface
+redefining-builtins-modules=oneagent._impl.six.moves
+disable=missing-docstring,fixme,too-few-public-methods,missing-return-doc

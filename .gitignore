@@ -1,0 +1,12 @@
+*.pyc
+*.pyo
+build/
+__pycache__/
+onesdk_shared.dll
+.tox/
+dist/
+/MANIFEST
+.cache/
+/tmp/
+*.egg-info
+.pytest_cache/
