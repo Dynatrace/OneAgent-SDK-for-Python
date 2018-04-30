@@ -1,5 +1,6 @@
 prune test
 graft src
+global-exclude onesdk_shared.*
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude __pycache__/*

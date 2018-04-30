@@ -28,7 +28,7 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         return ErrorCode.AGENT_NOT_ACTIVE
 
     def stub_set_logging_level(self, level):
-        return ErrorCode.AGENT_NOT_ACTIVE
+        pass
 
     def stub_default_logging_function(self, level, msg):
         print('[OneSDK:NULL]', level, msg, file=sys.stderr)
@@ -49,7 +49,9 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         return ErrorCode.SUCCESS
 
     def agent_get_current_state(self):
-        return AgentState.PERMANENTLY_INACTIVE
+        # Although PERMANENTLY_INACTIVE might be more fitting, NOT_INITIALIZED
+        # is what the stub also returns if it cannot find the agent.
+        return AgentState.NOT_INITIALIZED
 
     def agent_set_logging_callback(self, callback):
         self._diag_cb = callback

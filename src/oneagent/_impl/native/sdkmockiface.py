@@ -337,8 +337,6 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
         _typecheck(level, int)
         if level < MessageSeverity.FINEST or level > MessageSeverity.DEBUG:
             warnings.warn('Bad message severity level.', RuntimeWarning)
-            return ErrorCode.INVALID_ARGUMENT
-        return ErrorCode.SUCCESS
 
     def stub_default_logging_function(self, level, msg):
         print('[OneSDK:Mock]', level, msg, file=sys.stderr)

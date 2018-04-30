@@ -166,7 +166,7 @@ class SDKDllInterface(object):
         initfn(
             'stub_set_logging_level',
             (log_level_t,),
-            result_t)
+            None)
         initfn(
             'stub_default_logging_function',
             (log_level_t, XStrPInArg),

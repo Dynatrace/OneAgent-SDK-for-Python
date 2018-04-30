@@ -1,10 +1,17 @@
 #! /usr/bin/env python3
 
+# Beware when cross-building 64/32 bit:
+# When using --plat-name to override this, make sure to `rm -r build` othewise
+# files from the wrong platform might be reused.
+# Also, on Linux because of https://bugs.python.org/issue18987, using a 32 bit
+# Python on a 64 bit OS is not enough to change the platform tag.
+
 from __future__ import print_function
 
 import io
 import os
 from os import path
+import re
 
 # https://github.com/PyCQA/pylint/issues/73
 #pylint:disable=no-name-in-module,import-error
@@ -24,9 +31,25 @@ except ImportError:
 
 CSDK_ENV_NAME = 'DT_PYSDK_CSDK_PATH'
 
-with io.open('README.md', encoding='utf-8') as readmefile:
+_THIS_DIR = path.dirname(path.abspath(__file__))
+
+with io.open(path.join(_THIS_DIR, 'README.md'), encoding='utf-8') as readmefile:
     long_description = readmefile.read()
 del readmefile
+
+VER_RE = re.compile(r"^__version__ = '([^']+)'$")
+
+verfilepath = path.join(_THIS_DIR, 'src/oneagent/__init__.py')
+with io.open(verfilepath, encoding='utf-8') as verfile:
+    for line in verfile:
+        match = VER_RE.match(line)
+        if match:
+            __version__ = match.group(1)
+            break
+    else:
+        raise AssertionError('Version not found in src/oneagent/__init__.py')
+del match, verfile, verfilepath, VER_RE
+
 
 def compilefile(fname, mode='exec'):
     with open(fname) as srcfile:
@@ -63,7 +86,8 @@ if bdist_wheel is not None:
 def get_dll_info(plat_name):
     dll_info = {}
     #pylint:disable=exec-used
-    exec(compilefile('src/oneagent/_impl/native/sdkdllinfo.py'), dll_info)
+    infopath = path.join(_THIS_DIR, 'src/oneagent/_impl/native/sdkdllinfo.py')
+    exec(compilefile(infopath), dll_info)
     if plat_name:
         is_win32 = plat_name.startswith('win')
         is_64bit = plat_name.endswith('64')
@@ -158,39 +182,44 @@ cmdclss = {
 if bdist_wheel is not None:
     cmdclss['bdist_wheel'] = BdistWheel
 
-setup(
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    include_package_data=True,
-    zip_safe=True,
-    python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3',
-    cmdclass=cmdclss,
-    name='oneagent-sdk',
-    version='0.1',
-    distclass=BinaryDistribution,
+def main():
+    setup(
+        packages=find_packages('src'),
+        package_dir={'': 'src'},
+        include_package_data=True,
+        zip_safe=True,
+        python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3',
+        cmdclass=cmdclss,
+        name='oneagent-sdk',
+        version=__version__,
+        distclass=BinaryDistribution,
 
-    description='Dynatrace OneAgent SDK for Python',
-    long_description=long_description,
-    url='https://www.dynatrace.com/',
-    maintainer='Dynatrace LLC',
-    maintainer_email='dynatrace.oneagent.sdk@dynatrace.com',
-    license='Apache License 2.0',
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License', # 2.0
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: Implementation :: CPython',
-        #'Programming Language :: Python :: Implementation :: PyPy',
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: Microsoft :: Windows',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: System :: Monitoring'
-    ])
+        description='Dynatrace OneAgent SDK for Python',
+        long_description=long_description,
+        long_description_content_type='text/markdown',
+        url='https://www.dynatrace.com/',
+        maintainer='Dynatrace LLC',
+        maintainer_email='dynatrace.oneagent.sdk@dynatrace.com',
+        license='Apache License 2.0',
+        classifiers=[
+            'Development Status :: 2 - Pre-Alpha',
+            'Intended Audience :: Developers',
+            'License :: OSI Approved :: Apache Software License', # 2.0
+            'Programming Language :: Python',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.3',
+            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: Implementation :: CPython',
+            #'Programming Language :: Python :: Implementation :: PyPy',
+            'Operating System :: POSIX :: Linux',
+            'Operating System :: Microsoft :: Windows',
+            'Topic :: Software Development :: Libraries',
+            'Topic :: System :: Monitoring'
+        ])
+
+if __name__ == '__main__':
+    main()

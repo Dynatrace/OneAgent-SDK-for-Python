@@ -6,9 +6,10 @@
     The :class:`logging.Logger` on which managed Python SDK messages will be
     written.
 
-    This logger is not specially configured in any way. Unless you configure
-    this or the root logger yourself, you won't see any output. See
-    :ref:`logging-basic-tutorial` in the official Python documentation.
+    This logger has set the log level so that no messages are displayed by
+    default. Use e.g. :code:`oneagent.logger.setLevel(logging.INFO)` to see
+    them. See :ref:`logging-basic-tutorial` in the official Python
+    documentation for more on configuring the logger.
 
 .. class:: InitResult
 
@@ -70,7 +71,12 @@ from oneagent._impl.six.moves import range #pylint:disable=import-error
 from .common import SDKError, ErrorCode
 from ._impl.native import nativeagent
 
+# See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
+# Dependency Specification"
+__version__ = '0.1a1'
+
 logger = logging.getLogger('py_sdk')
+logger.setLevel(logging.CRITICAL + 1) # Disabled by default
 
 class InitResult(namedtuple('InitResult', 'status error')):
     __slots__ = ()

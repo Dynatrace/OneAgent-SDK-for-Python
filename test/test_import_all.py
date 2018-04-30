@@ -62,7 +62,7 @@ def csdkinst():
 def test_sdkctypesiface_smoke(csdkinst):
     sdk = csdkinst
     nativeagent.checkresult(
-        sdk, sdk.stub_set_logging_level(sdkcommon.MessageSeverity.FINEST))
+        sdk, sdk.stub_set_variable('agentactive=true', False))
     state = sdk.agent_get_current_state()
     assert state == sdkcommon.AgentState.NOT_INITIALIZED
     sdk.stub_free_variables()
