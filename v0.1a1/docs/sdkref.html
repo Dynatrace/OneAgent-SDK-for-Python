@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Public SDK API Reference &#8212; Dynatrace OneAgent and SDK for Python  documentation</title>
+    <title>Public SDK API Reference &#8212; Dynatrace OneAgent and SDK for Python 0.1a1 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="quickstart.html" title="Quickstart"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 0.1a1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -54,9 +54,10 @@
 <code class="descclassname">oneagent.</code><code class="descname">logger</code><a class="headerlink" href="#oneagent.logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">logging.Logger</span></code></a> on which managed Python SDK messages will be
 written.</p>
-<p>This logger is not specially configured in any way. Unless you configure
-this or the root logger yourself, you won’t see any output. See
-<a class="reference external" href="https://docs.python.org/3/howto/logging.html#logging-basic-tutorial" title="(in Python v3.6)"><span>Basic Logging Tutorial</span></a> in the official Python documentation.</p>
+<p>This logger has set the log level so that no messages are displayed by
+default. Use e.g. <code class="code docutils literal notranslate"><span class="pre">oneagent.logger.setLevel(logging.INFO)</span></code> to see
+them. See <a class="reference external" href="https://docs.python.org/3/howto/logging.html#logging-basic-tutorial" title="(in Python v3.6)"><span>Basic Logging Tutorial</span></a> in the official Python
+documentation for more on configuring the logger.</p>
 </dd></dl>
 
 <dl class="class">
@@ -585,26 +586,20 @@ started state.</p>
 unstarted state (i.e. before starting the tracer). No nodes or path will be
 produced then. However, it is usually better to avoid creating the tracer in
 the first place instead of throwing it away unused that way.</p>
+<p>Tracers can be used as context-managers, i.e. in <code class="code docutils literal notranslate"><span class="pre">with</span></code> blocks:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tracer</span><span class="p">:</span>
+    <span class="c1"># code</span>
+</pre></div>
+</div>
+<p>This will start the tracer upon entering the <code class="code docutils literal notranslate"><span class="pre">with</span></code>-block and end it
+upon leaving it. Additionally, if an exception leaves the block,
+<a class="reference internal" href="#oneagent.sdk.tracers.Tracer.mark_failed_exc" title="oneagent.sdk.tracers.Tracer.mark_failed_exc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mark_failed_exc()</span></code></a> will be called on the tracer.</p>
 <dl class="method">
 <dt id="oneagent.sdk.tracers.Tracer.start">
 <code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#oneagent.sdk.tracers.Tracer.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start the tracer and timing.</p>
 <p>May only be called in the unstarted state. Transitions the state from
 unstarted to started.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="code docutils literal notranslate"><span class="pre">self</span></code>. This is intended for uses like:<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">sdk</span><span class="o">.</span><span class="n">trace_something</span><span class="p">(</span><span class="n">foo</span><span class="p">,</span> <span class="n">bar</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">as</span> <span class="n">tracer</span><span class="p">:</span>
-    <span class="c1"># ...</span>
-</pre></div>
-</div>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#oneagent.sdk.tracers.Tracer" title="oneagent.sdk.tracers.Tracer">Tracer</a></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="method">
@@ -1422,7 +1417,7 @@ calling <a class="reference internal" href="#oneagent.common.SDKHandleBase.close
         <li class="right" >
           <a href="quickstart.html" title="Quickstart"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 0.1a1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

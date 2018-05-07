@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quickstart &#8212; Dynatrace OneAgent and SDK for Python  documentation</title>
+    <title>Quickstart &#8212; Dynatrace OneAgent and SDK for Python 0.1a1 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for Dynatrace OneAgent and SDK for Python"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 0.1a1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -61,9 +61,8 @@
 <span class="k">def</span> <span class="nf">traced_db_operation</span><span class="p">(</span><span class="n">dbinfo</span><span class="p">,</span> <span class="n">sql</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;+db&#39;</span><span class="p">,</span> <span class="n">dbinfo</span><span class="p">,</span> <span class="n">sql</span><span class="p">)</span>
 
-    <span class="c1"># start() returns the tracer itself. Thus, the with-block will automatically</span>
-    <span class="c1"># end the tracer at its end, tracing its contained code.</span>
-    <span class="k">with</span> <span class="n">getsdk</span><span class="p">()</span><span class="o">.</span><span class="n">trace_sql_database_request</span><span class="p">(</span><span class="n">dbinfo</span><span class="p">,</span> <span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">as</span> <span class="n">tracer</span><span class="p">:</span>
+    <span class="c1"># Entering the with block automatically start the tracer.</span>
+    <span class="k">with</span> <span class="n">getsdk</span><span class="p">()</span><span class="o">.</span><span class="n">trace_sql_database_request</span><span class="p">(</span><span class="n">dbinfo</span><span class="p">,</span> <span class="n">sql</span><span class="p">)</span> <span class="k">as</span> <span class="n">tracer</span><span class="p">:</span>
 
         <span class="c1"># In real-world code, you would do the actual database operation here,</span>
         <span class="c1"># i.e. call the database&#39;s API.</span>
@@ -86,7 +85,7 @@
         <span class="n">onesdk</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="n">onesdk</span><span class="o">.</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">IN_PROCESS</span><span class="p">,</span> <span class="s1">&#39;localhost&#39;</span><span class="p">),</span>
         <span class="n">protocol_name</span><span class="o">=</span><span class="s1">&#39;DUMMY_PY_PROTOCOL&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">call</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+        <span class="k">with</span> <span class="n">call</span><span class="p">:</span>
 
             <span class="c1"># Note that this property can only be accessed after starting the</span>
             <span class="c1"># tracer. See the documentation on tagging for more information.</span>
@@ -111,7 +110,7 @@
         <span class="n">incall</span> <span class="o">=</span> <span class="n">getsdk</span><span class="p">()</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span>
             <span class="s1">&#39;dummyPyMethod&#39;</span><span class="p">,</span> <span class="s1">&#39;DummyPyService&#39;</span><span class="p">,</span> <span class="s1">&#39;dummyEndpoint&#39;</span><span class="p">,</span>
             <span class="n">protocol_name</span><span class="o">=</span><span class="s1">&#39;DUMMY_PY_PROTOCOL&#39;</span><span class="p">,</span> <span class="n">str_tag</span><span class="o">=</span><span class="n">strtag</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">incall</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+        <span class="k">with</span> <span class="n">incall</span><span class="p">:</span>
             <span class="n">dbinfo</span> <span class="o">=</span> <span class="n">getsdk</span><span class="p">()</span><span class="o">.</span><span class="n">create_database_info</span><span class="p">(</span>
                 <span class="s1">&#39;Northwind&#39;</span><span class="p">,</span> <span class="n">onesdk</span><span class="o">.</span><span class="n">DatabaseVendor</span><span class="o">.</span><span class="n">SQLSERVER</span><span class="p">,</span>
                 <span class="n">onesdk</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="n">onesdk</span><span class="o">.</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">TCP_IP</span><span class="p">,</span> <span class="s1">&#39;10.0.0.42:6666&#39;</span><span class="p">))</span>
@@ -181,7 +180,7 @@
 
         <span class="c1"># We use trace_incoming_remote_call here, because it is one of the few</span>
         <span class="c1"># calls that create a new path if none is running yet.</span>
-        <span class="k">with</span> <span class="n">sdk</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+        <span class="k">with</span> <span class="n">sdk</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span><span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">):</span>
             <span class="c1"># Simulate some remote calls</span>
             <span class="n">outgoing_remote_call</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">outgoing_remote_call</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -242,7 +241,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for Dynatrace OneAgent and SDK for Python"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 0.1a1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
