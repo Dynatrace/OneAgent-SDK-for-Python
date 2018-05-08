@@ -134,6 +134,7 @@ class SDKDllInterface(object):
     def __init__(self, libname):
         self._log_cb = None
         self._diag_cb = None
+        self._py_diag_cb = None
 
         self._dll = ctypes.WinDLL(libname) if WIN32 else ctypes.CDLL(libname)
 
@@ -403,14 +404,19 @@ class SDKDllInterface(object):
             self._agent_set_logging_callback(
                 ctypes.cast(None, agent_logging_callback_t))
             self._diag_cb = None
+            self._py_diag_cb = None
         else:
+
+            @wraps(callback)
             def cb_wrapper(msg):
                 if isinstance(msg, six.binary_type):
                     msg = u8_to_str(msg)
                 return callback(msg)
+
             c_cb = agent_logging_callback_t(cb_wrapper)
             self._agent_set_logging_callback(c_cb)
             self._diag_cb = c_cb
+            self._py_diag_cb = cb_wrapper
 
     def __del__(self):
         # __del__ is also called when __init__ fails, so safeguard against that
@@ -420,9 +426,7 @@ class SDKDllInterface(object):
             self.stub_set_logging_callback(None)
 
     def agent_get_logging_callback(self):
-        if self._diag_cb:
-            return self._diag_cb.value
-        return None
+        return self._py_diag_cb
 
     def tracer_get_outgoing_tag(self, tracer, use_byte_tag=False):
         tagsz = ctypes.c_size_t()

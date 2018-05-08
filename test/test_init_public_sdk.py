@@ -88,7 +88,7 @@ def main():
 
     if 'tryinit' in flags:
         try:
-            init_result = oneagent.try_init()
+            init_result = oneagent.try_init(['loglevelsdk=finest'])
         except ImportError:
             if 'nonull' in flags:
                 print('ABORTED.')

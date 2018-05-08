@@ -153,7 +153,7 @@ class PostBuildExtCommand(build_ext):
         self.__base.copy_extensions_to_source(self)
 
         build_py = self.get_finalized_command('build_py')
-        src_filename = self.get_dll_output_path()
+        src_filename = get_dll_input_path(self.plat_name)
         package = 'oneagent._impl.native'
         package_dir = build_py.get_package_dir(package)
         dest_filename = path.join(package_dir, path.basename(src_filename))

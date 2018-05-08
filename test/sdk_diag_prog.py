@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import sys
+import gc
 
 import oneagent
 from oneagent._impl import six
@@ -19,9 +20,15 @@ def main():
     try:
         sdk.set_diagnostic_callback(diag_cb)
         sdk.create_database_info(None, None, onesdk.Channel(0))
+        gc.collect()
+        gc.collect()
+        gc.collect()
         print(call_msg)
         n_msgs = len(call_msg)
-        assert n_msgs >= 1
+
+        # Database name must not be null (from CSDK), leaked db info handle
+        assert n_msgs == 2
+
         assert all(isinstance(m, six.text_type) for m in call_msg)
         sdk.set_diagnostic_callback(None)
         sdk.create_database_info(None, None, onesdk.Channel(0))

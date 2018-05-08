@@ -4,7 +4,7 @@ from timeit import default_timer as gtm
 from oneagent.sdk import SDK
 
 def bench():
-    with SDK.get().trace_incoming_remote_call('a', 'b', 'c').start():
+    with SDK.get().trace_incoming_remote_call('a', 'b', 'c'):
         tdf = 0
         t_tot = 0
         t_inner = None
