@@ -24,11 +24,12 @@ class AgentState(_Uninstantiable):
     #: The SDK stub is connected to the agent, which is currently active.
     ACTIVE = 0
 
-    #: The SDK stub is connected to the agent, which is permanently inactive.
-    PERMANENTLY_INACTIVE = 1
-
     #: The SDK stub is connected to the agent, which is temporarily inactive.
-    TEMPORARILY_INACTIVE = 2
+    TEMPORARILY_INACTIVE = 1
+
+    #: The SDK stub is connected to the agent, which is permanently inactive.
+    PERMANENTLY_INACTIVE = 2
+
 
     #: The agent has not been initialized.
     NOT_INITIALIZED = 3

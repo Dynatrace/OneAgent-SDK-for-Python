@@ -42,21 +42,9 @@ documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/READM
 
 <a id="installation"></a>
 
-Once the oneagent SDK is released to PyPI, you will be able to just do `python
--m pip install oneagent-sdk`, to install the SDK.
 
-While the SDK has no public release, please use the wheels provided on the
-[GitHub releases
-page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases), by
- giving the additional option
-`--find-links DISTIDXURL` to pip (where `DISTIDXURL` is the URL linked on the
-GitHub release. This approach also works when
-installing packages that depend on the oneagent-sdk package, e.g. `pip install
---find-links DISTIDXURL my-pkg-that-uses-oneagent-sdk`. (Note that this means that
-you cannot just use `python setup.py install` for the dependent package. If you
-only have a directoy with `setup.py` instead of a proper distribution, use
-`python setup.py sdist` and then `pip install --find-links dist --find-links
-DISTIDXURL PACKAGENAME`.)
+Just do `python -m pip install --upgrade oneagent-sdk`, to install the latest
+version of the OneAgent SDK for Python.
 
 To verify your installation, execute
 
@@ -83,11 +71,15 @@ if not oneagent.try_init():
 
 with SDK.get().trace_incoming_remote_call('method', 'service', 'endpoint'):
     pass
+
+print('It may take a few moments before the path appears in the UI.')
+input('Please wait...')
+oneagent.shutdown()
 ```
 
-For this, follow the <tests/onesdksamplepy.py>
-example (see also the
-[documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/quickstart.html).
+For this, follow the [tests/onesdksamplepy.py](test/onesdksamplepy.py) example
+(see also the
+[documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/quickstart.html)).
 
 ## Documentation
 
