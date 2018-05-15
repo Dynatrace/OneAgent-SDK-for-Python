@@ -197,12 +197,13 @@ def main():
         description='Dynatrace OneAgent SDK for Python',
         long_description=long_description,
         long_description_content_type='text/markdown',
-        url='https://www.dynatrace.com/',
+        url='https://github.com/Dynatrace/OneAgent-SDK-for-Python',
+        download_url='https://pypi.org/project/oneagent-sdk/',
         maintainer='Dynatrace LLC',
         maintainer_email='dynatrace.oneagent.sdk@dynatrace.com',
         license='Apache License 2.0',
         classifiers=[
-            'Development Status :: 2 - Pre-Alpha',
+            'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License', # 2.0
             'Programming Language :: Python',
@@ -217,9 +218,14 @@ def main():
             #'Programming Language :: Python :: Implementation :: PyPy',
             'Operating System :: POSIX :: Linux',
             'Operating System :: Microsoft :: Windows',
-            'Topic :: Software Development :: Libraries',
             'Topic :: System :: Monitoring'
-        ])
+        ],
+        project_urls={
+            'Issue Tracker':
+                'https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues',
+            'Documentation':
+                'https://dynatrace.github.io/OneAgent-SDK-for-Python/',
+        })
 
 if __name__ == '__main__':
     main()

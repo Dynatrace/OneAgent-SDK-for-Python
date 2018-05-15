@@ -51,7 +51,7 @@
 
         A positive status code meaning that the SDK has sucessfully been
         initialized, but there have been some warnings (e.g. some options could
-        not be processe, or the agent is inactive).
+        not be processed, or the agent is permanently inactive).
 
     .. data:: STATUS_ALREADY_INITIALIZED
 
@@ -73,7 +73,7 @@ from ._impl.native import nativeagent
 
 # See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
 # Dependency Specification"
-__version__ = '0.1a3'
+__version__ = '1.0rc1'
 
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default
@@ -139,10 +139,13 @@ def try_init(sdkopts=(), sdklibname=None):
     functions can be called but will do nothing.
 
     If you call this function multiple times, you must call :func:`shutdown`
-    just as many times.
+    just as many times. The options from all but the first :code:`try_init` call
+    will be ignored (the return value will have the
+    :data:`InitResult.STATUS_ALREADY_INITIALIZED` status code in that case).
 
     :param sdkopts: A sequence of strings of the form
-        :samp:`{NAME}={VALUE}` that set the given SDK options.
+        :samp:`{NAME}={VALUE}` that set the given SDK options. Igored in all but
+        the first :code:`try_init` call.
     :type sdkopts: ~typing.Iterable[str]
     :param str sdklibname: The file or directory name of the native C SDK
         DLL. If None, the shared library packaged directly with the agent is
