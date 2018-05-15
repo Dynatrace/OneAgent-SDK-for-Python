@@ -1,0 +1,120 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>String encoding and unicode issues &#8212; Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tagging" href="tagging.html" />
+    <link rel="prev" title="Public SDK API Reference" href="sdkref.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tagging.html" title="Tagging"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sdkref.html" title="Public SDK API Reference"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="string-encoding-and-unicode-issues">
+<span id="encoding"></span><h1>String encoding and unicode issues<a class="headerlink" href="#string-encoding-and-unicode-issues" title="Permalink to this headline">¶</a></h1>
+<p>This section mostly concerns Python 2.</p>
+<p>When the documentation says that a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> is accepted, an <code class="xref py py-class docutils literal notranslate"><span class="pre">unicode</span></code>
+is also always accepted on Python 2. What is more, when the documentation says
+that a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> is returned or passed to a callback, on Python 2 it is
+actually a <code class="xref py py-class docutils literal notranslate"><span class="pre">unicode</span></code> (you mostly don’t need to care about that though,
+because most string operations on Python 2 allow mixing <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">unicode</span></code>).</p>
+<p>When passing a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> object (or, equivalently, a <code class="code docutils literal notranslate"><span class="pre">str</span></code> object on
+Python 2) to a SDK function that says that it accepts a <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, the bytes
+will be interpreted as being UTF-8 encoded. Beware: If the string has invalid
+UTF-8 (e.g. Latin-1/ISO-8859-1, as it may occur in <a class="reference internal" href="sdkref.html#http-encoding-warning"><span class="std std-ref">HTTP headers</span></a>), the function to which it was passed may fail either
+partially or fully. Such failures are guaranteed to neither throw exceptions nor
+violate any invariants of the involved objects, but some or all of the
+information passed in that function call may be lost (E.g. a single invalid HTTP
+header passed to <a class="reference internal" href="sdkref.html#oneagent.sdk.SDK.trace_incoming_web_request" title="oneagent.sdk.SDK.trace_incoming_web_request"><code class="xref py py-meth docutils literal notranslate"><span class="pre">oneagent.sdk.SDK.trace_incoming_web_request()</span></code></a> may cause
+an null-tracer to be returned – but it is also allowed to e.g. truncate that
+HTTP header and discard all that follow; the exact failure mode is undefined and
+you should take care to not pass invalid strings). Also, the diagnostic callback
+(<a class="reference internal" href="sdkref.html#oneagent.sdk.SDK.set_diagnostic_callback" title="oneagent.sdk.SDK.set_diagnostic_callback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">oneagent.sdk.SDK.set_diagnostic_callback()</span></code></a>) may be invoked (but is not
+guaranteed to).</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sdkref.html"
+                        title="previous chapter">Public SDK API Reference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tagging.html"
+                        title="next chapter">Tagging</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tagging.html" title="Tagging"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sdkref.html" title="Public SDK API Reference"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Dynatrace LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.3.
+    </div>
+  </body>
+</html>

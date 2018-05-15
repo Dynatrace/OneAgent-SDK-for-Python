@@ -1,0 +1,202 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tagging &#8212; Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="String encoding and unicode issues" href="encoding.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="encoding.html" title="String encoding and unicode issues"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tagging">
+<span id="id1"></span><h1>Tagging<a class="headerlink" href="#tagging" title="Permalink to this headline">¶</a></h1>
+<p>Tagging allows you to link paths from different threads or processes
+(potentially even running on completely different hosts) together, i.e. telling
+Dynatrace that a particular path branched off from a particular other path node.
+Semantically, this usually indicates some kind of remote-call, cross-thread call
+or message flow.</p>
+<p>The APIs for tagging are defined in the <a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.OutgoingTaggable" title="oneagent.sdk.tracers.OutgoingTaggable"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutgoingTaggable</span></code></a> base class,
+which allows retrieving a tag for attaching another path to that node, and in
+the form of two optional and mutually exclusive <code class="code docutils literal notranslate"><span class="pre">byte_tag</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">str_tag</span></code> parameters to some <code class="code docutils literal notranslate"><span class="pre">trace_*</span></code> methods of
+<a class="reference internal" href="sdkref.html#oneagent.sdk.SDK" title="oneagent.sdk.SDK"><code class="xref py py-class docutils literal notranslate"><span class="pre">oneagent.sdk.SDK</span></code></a> (these are <em class="dfn">incoming-taggable</em>), which allows
+attaching that node to the one with the given tag.</p>
+<p>The following classes are incoming-taggable:</p>
+<ul class="simple">
+<li><a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.IncomingRemoteCallTracer" title="oneagent.sdk.tracers.IncomingRemoteCallTracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">IncomingRemoteCallTracer</span></code></a> /
+<a class="reference internal" href="sdkref.html#oneagent.sdk.SDK.trace_incoming_remote_call" title="oneagent.sdk.SDK.trace_incoming_remote_call"><code class="xref py py-meth docutils literal notranslate"><span class="pre">oneagent.sdk.SDK.trace_incoming_remote_call()</span></code></a></li>
+<li><a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.IncomingWebRequestTracer" title="oneagent.sdk.tracers.IncomingWebRequestTracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">IncomingWebRequestTracer</span></code></a> /
+<a class="reference internal" href="sdkref.html#oneagent.sdk.SDK.trace_incoming_web_request" title="oneagent.sdk.SDK.trace_incoming_web_request"><code class="xref py py-meth docutils literal notranslate"><span class="pre">oneagent.sdk.SDK.trace_incoming_web_request()</span></code></a></li>
+</ul>
+<p>The following classes are <a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.OutgoingTaggable" title="oneagent.sdk.tracers.OutgoingTaggable"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutgoingTaggable</span></code></a>:</p>
+<ul class="simple">
+<li><a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.OutgoingRemoteCallTracer" title="oneagent.sdk.tracers.OutgoingRemoteCallTracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutgoingRemoteCallTracer</span></code></a></li>
+</ul>
+<p>You first use either <a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.OutgoingTaggable.outgoing_dynatrace_string_tag" title="oneagent.sdk.tracers.OutgoingTaggable.outgoing_dynatrace_string_tag"><code class="xref py py-attr docutils literal notranslate"><span class="pre">OutgoingTaggable.outgoing_dynatrace_string_tag</span></code></a> or
+<a class="reference internal" href="sdkref.html#oneagent.sdk.tracers.OutgoingTaggable.outgoing_dynatrace_byte_tag" title="oneagent.sdk.tracers.OutgoingTaggable.outgoing_dynatrace_byte_tag"><code class="xref py py-attr docutils literal notranslate"><span class="pre">OutgoingTaggable.outgoing_dynatrace_byte_tag</span></code></a> to retrieve a string or
+binary tag from the tracer where you want branch off from. Then you somehow
+forward the tag to the location you want to link. At this location, you pass
+that tag as the corresponding <code class="code docutils literal notranslate"><span class="pre">tag</span></code> argument for a supported
+<code class="code docutils literal notranslate"><span class="pre">trace_*</span></code> method.</p>
+<p>Whether you use string or byte tags does not matter for the resulting paths (you
+must not mix them, i.e. pass a byte tag as <code class="code docutils literal notranslate"><span class="pre">str_tag</span></code> or vice versa). Use
+the one that is more convenient for you (e.g. if the tag must be transmitted via
+text-based protocol, string tags are the natural choice). If you have no reason
+to prefer string tags, byte tags are preferable because they are potentially
+smaller and more efficient to process by Dynatrace.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>For example let’s say you want to gain insights into a client/server application
+that communicates using a custom-built remoting protocol (e.g. over TCP/IP).
+First you would instrument the applications separately using, e.g. using the
+<cite>trace_*</cite> functions from <a class="reference internal" href="sdkref.html#oneagent.sdk.SDK" title="oneagent.sdk.SDK"><code class="xref py py-class docutils literal notranslate"><span class="pre">oneagent.sdk.SDK</span></code></a> together with <cite>with</cite>-blocks:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="k">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="n">Channel</span>
+
+<span class="c1"># In the client:</span>
+<span class="k">def</span> <span class="nf">call_remote</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+   <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_outgoing_remote_call</span><span class="p">(</span>
+     <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
+      <span class="n">Channel</span><span class="p">(</span><span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+      <span class="n">myremotingchannel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+<span class="c1"># In the server:</span>
+<span class="k">def</span> <span class="nf">my_remote_function</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+   <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span>
+     <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">)</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+      <span class="n">do_actual_work</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now you will get two paths that will be completely unrelated from Dynatrace’s
+point of view. To change that, you do the following:</p>
+<ol class="arabic simple">
+<li>Obtain the outgoing tag at the call site.</li>
+<li>Forward that tag through to the remote function.</li>
+<li>In the remote function, pass the tag (which is now an incoming tag) when
+creating the tracer.</li>
+</ol>
+<p>The result after doing this could look like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="kn">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="n">Channel</span>
+
+<span class="c1"># In the client:</span>
+<span class="k">def</span> <span class="nf">call_remote</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+   <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_outgoing_remote_call</span><span class="p">(</span>
+     <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
+      <span class="n">Channel</span><span class="p">(</span><span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span> <span class="c1"># Starts the tracer; required for obtaining a tag!</span>
+<span class="hll">      <span class="n">tag</span> <span class="o">=</span> <span class="n">tracer</span><span class="o">.</span><span class="n">outgoing_dynatrace_byte_tag</span>
+</span><span class="hll">      <span class="n">message</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s1">&#39;Dynatrace-Tag&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span> <span class="c1"># Or some such</span>
+</span>      <span class="n">myremotingchannel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+<span class="c1"># In the server:</span>
+<span class="k">def</span> <span class="nf">my_remote_function</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+<span class="hll">   <span class="n">tag</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get_header_optional</span><span class="p">(</span><span class="s1">&#39;Dynatrace-Tag&#39;</span><span class="p">)</span>
+</span>   <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span>
+<span class="hll">     <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
+</span>     <span class="n">byte_tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+      <span class="n">do_actual_work</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note these points:</p>
+<ul class="simple">
+<li>You are responsible for forwarding the tag yourself. Apart from initially
+giving you a binary or string tag, the SDK can give you no help here. E.g. in
+the example above it is assumed that our remoting protocol allows adding
+arbitrary headers.</li>
+<li>Do not depend on the availability of the tag on the receiver side: you should
+always be careful to not introduce additional failure modes into your
+application when using the Dynatrace SDK.</li>
+<li>The outgoing tag can only be obtained between starting and ending the tracer.</li>
+<li>You should take care that obtaining the incoming tag is not an expensive
+operation, as it can not be accounted for in the timings of the resulting
+path.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tagging</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="encoding.html"
+                        title="previous chapter">String encoding and unicode issues</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="encoding.html" title="String encoding and unicode issues"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0rc1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Dynatrace LLC.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.3.
+    </div>
+  </body>
+</html>
