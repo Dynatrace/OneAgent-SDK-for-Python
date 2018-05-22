@@ -187,7 +187,8 @@ def test_public_sdk_sample(native_sdk):
 
     def check_remote_node(node):
         assert node.vals[:3] == (
-            'dummyPyMethod', 'DummyPyService', 'dummyEndpoint')
+            'dummyPyMethod', 'DummyPyService',
+            'dupypr://localhost/dummyEndpoint')
         assert node.protocol_name == 'DUMMY_PY_PROTOCOL'
 
     def check_root(root):
@@ -235,9 +236,12 @@ def test_public_sdk_sample(native_sdk):
     def check_is_linked(root):
         assert root.linked_parent
 
+    def check_web_request(root):
+        assert type(root) is sdkmockiface.InWebReqHandle
+
     chk_seq(
         native_sdk.finished_paths,
-        [check_is_linked] * 2 + [check_root])
+        [check_web_request] + [check_is_linked] * 2 + [check_root])
 
 @pytest.mark.dependsnative
 def test_sdk_callback_smoke():

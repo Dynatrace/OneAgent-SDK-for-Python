@@ -205,6 +205,7 @@ def main():
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
+            'License :: OSI Approved',
             'License :: OSI Approved :: Apache Software License', # 2.0
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',

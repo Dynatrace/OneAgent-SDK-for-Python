@@ -73,7 +73,7 @@ from ._impl.native import nativeagent
 
 # See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
 # Dependency Specification"
-__version__ = '1.0rc1'
+__version__ = '1.0.0'
 
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default

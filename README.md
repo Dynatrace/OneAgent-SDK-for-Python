@@ -1,6 +1,9 @@
 **Disclaimer: This SDK is currently still work in progress.
 Using the OneAgent SDK for Python is COMPLETELY UNSUPPORTED at this stage!**
 
+> Read the latest version of this README, with working internal links, at
+[GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python#readme).
+
 # Dynatrace OneAgent SDK for Python
 
 This SDK enables Dynatrace customers to extend request level visibility into
@@ -26,6 +29,7 @@ SDK](https://github.com/Dynatrace/OneAgent-SDK).
   * [Read the manual](#read-the-manual)
   * [Let us help you](#let-us-help-you)
 - [Release notes](#release-notes)
+- [License](#license)
 
 <!-- tocstop -->
 
@@ -49,7 +53,6 @@ documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/READM
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
 |:----------------------|:---------------------|:-----------------|
-|0.1                    |1.1.0                 |≥1.141            |
 |1.0                    |1.1.0                 |≥1.141            |
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
@@ -93,10 +96,10 @@ input('Please wait...')
 oneagent.shutdown()
 ```
 
-For this, follow the
-[https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/test/onesdksamplepy.py](test/onesdksamplepy.py)
-example (see also Quickstart section in the
-[documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/)).
+For this, follow the [provided sample
+application](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/samples/basic-sdk-sample/basic_sdk_sample.py)
+(see also Quickstart section in the
+[documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/quickstart.html)).
 
 
 <a name="api-concepts"></a>
@@ -381,9 +384,22 @@ documentation](#documenation) before you ask for help. Especially the
 
   SLAs don't apply for GitHub tickets.
 
+<a name="release-notes"></a>
 ## Release notes
 
 Please see the [GitHub
 releases page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases),
 and the [PyPI release
 history](https://pypi.org/project/oneagent-sdk/#history).
+
+<a name="license"></a>
+## License
+
+See the LICENSE file for details. It should be included in your distribution.
+Otherwise, see the most recent version on
+[GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/LICENSE).
+
+Summary: This software is licensed under the terms of the Apache License Version
+2.0 and comes bundled with the [six library by Benjamin
+Peterson](http://six.readthedocs.io/), which is licensed under the terms of the
+MIT license.

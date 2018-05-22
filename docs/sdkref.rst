@@ -1,5 +1,5 @@
-Public SDK API Reference
-========================
+oneagent-sdk API Reference
+==========================
 
 For a high-level overview of SDK concepts, see
 https://github.com/Dynatrace/OneAgent-SDK.

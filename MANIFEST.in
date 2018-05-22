@@ -6,3 +6,4 @@ global-exclude *.pyo
 global-exclude __pycache__/*
 include MANIFEST.in
 include README.md
+include LICENSE
