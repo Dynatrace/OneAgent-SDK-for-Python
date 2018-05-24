@@ -1,13 +1,10 @@
 Disclaimer: This SDK is currently in EAP and still work in progress.
 
-> Read the latest version of this README, with working internal links, at
-[GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python#readme).
+> Read the latest version of this README, with working internal links, at [GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python#readme).
 
 # Dynatrace OneAgent SDK for Python
 
-This SDK enables Dynatrace customers to extend request level visibility into
-Python applications. It provides the Python implementation of the [Dynatrace OneAgent
-SDK](https://github.com/Dynatrace/OneAgent-SDK).
+This SDK enables Dynatrace customers to extend request level visibility into Python applications. It provides the Python implementation of the [Dynatrace OneAgent SDK](https://github.com/Dynatrace/OneAgent-SDK).
 
 <!-- Generate with https://github.com/jonschlinkert/markdown-toc -->
 
@@ -35,13 +32,11 @@ SDK](https://github.com/Dynatrace/OneAgent-SDK).
 <a name="requirements"></a>
 ## Requirements
 
-The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython
-(that is, the "normal" Python, i.e. the Python implementation from
-<https://python.org>) is supported.
+The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation from <https://python.org>) is supported.
 
-The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and included into the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
+The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and delivered with the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
 
-The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table. The SDK for C/C++'s requirement for the Dynatrace OneAgent is also shown here, for your convenience (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
+The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table. required Dynatrace OneAgent version is also shown here (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
 |:----------------------|:---------------------|:-----------------|
@@ -65,13 +60,16 @@ To verify your installation, execute
 python -c "import oneagent; print(oneagent.try_init())"
 ```
 
-If everything worked, you should get some output ending with
-`InitResult(status=0, error=None)`. Otherwise, see
-[Troubleshooting](#troubleshooting).
+If the installation was successful, you should get an output ending with `InitResult(status=0, error=None)`. Otherwise, see the [Troubleshooting](#troubleshooting) section.
 
-You then need to load the SDK into the application and add code that traces your
-application using the SDK. For a quick “Hello World” that should give you a Path
-in the Dynatrace UI, try this:
+To load the OneAgent SDK into your application, just add the following lines of code at the top of your script:
+
+```python
+import oneagent
+from oneagent.sdk import SDK
+```
+
+Here is a quick "Hello World" that will produce a service call in Dynatrace:
 
 ```python
 import oneagent
@@ -88,16 +86,18 @@ input('Please wait...')
 oneagent.shutdown()
 ```
 
-A more detailed [sample application](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/samples/basic-sdk-sample/basic_sdk_sample.py) is available. See also Quickstart section in the [API documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/quickstart.html).
+A more detailed [sample application is available here](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/samples/basic-sdk-sample/basic_sdk_sample.py). See also the Quickstart section in the [API documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/quickstart.html).
 
 
 <a name="api-concepts"></a>
 ## API Concepts
 
+Common concepts of the Dynatrace OneAgent SDK are explained the [Dynatrace OneAgent SDK repository](https://github.com/Dynatrace/OneAgent-SDK#apiconcepts).
+
 <a name="initialization-and-sdk-objects"></a>
 ### Initialization and SDK objects
 
-Before first using any other SDK functions, you should initialize the SDK.
+Before first using any other SDK functions, you need to initialize the SDK.
 
 ```python
 init_result = oneagent.try_init()
@@ -108,22 +108,13 @@ if not init_result:
     print('SDK will definitely not work (i.e. functions will be no-ops).')
 ```
 
-See the documentation for the [`try_init`
-function](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.try_init)
-and the [`InitResult`
-class](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.InitResult)
-for more information.
+See the API documentation for the [`try_init` function](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.try_init) and the [`InitResult` class](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.InitResult) for more information.
 
-To then use the SDK, get a reference to the
-[`SDK`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK)
-singleton by calling its static
-[`get`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.get)
-static method. The first thing you may want to do with this object, is checking
-if the agent is active by comparing the value of the
+To use the SDK, get a reference to the [`SDK`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK)
+singleton by calling its static [`get`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.get)
+static method. The first thing you may want to do with this object, is checking if the agent is active by comparing the value of the
 [`agent_state`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.agent_state)
-property to the
-[`oneagent.common.AgentState`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.common.AgentState)
-constants.
+property to the [`oneagent.common.AgentState`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.common.AgentState) constants.
 
 ```python
 import oneagent.sdk
@@ -173,18 +164,22 @@ strings. Byte strings must always use the UTF-8 encoding!
 <a name="features-and-how-to-use-them"></a>
 ## Features and how to use them
 
+The feature sets differ slightly with each language implementation. More functionality will be added over time, see <a href="https://answers.dynatrace.com/spaces/483/dynatrace-product-ideas/idea/198106/planned-features-for-oneagent-sdk.html" target="_blank">Planned features for OneAgent SDK</a> for details on upcoming features.
+
+A more detailed specification of the features can be found in [Dynatrace OneAgent SDK](https://github.com/Dynatrace/OneAgent-SDK#features).
+
+|Feature|Required OneAgent SDK for Python version|
+|:------|:--------|
+|Trace incoming and outgoing remote calls  |>=1.0.0  |
+|SQL database requests  |>=1.0.0  |
+|Incoming web requests  |>=1.0.0  |
+
 <a name="remote-calls"></a>
 ### Remote calls
 
-You can use the SDK to trace communication from one process to another. This
-will enable you to see full Service Flow, PurePath and Smartscape topology for
-remoting technologies that Dynatrace is not aware of.
+You can use the SDK to trace communication from one process to another. This will enable you to see full Service Flow, PurePath and Smartscape topology for remoting technologies that Dynatrace is not aware of.
 
-To trace any kind of remote call you first need to create a Tracer. The Tracer
-object represents the endpoint that you want to call, thus you need to supply
-the name of the remote service and method. In addition, you need to transport
-a tag in your remote call from the client side to the server side if you want
-to trace it end to end.
+To trace any kind of remote call you first need to create a Tracer. The Tracer object represents the endpoint that you want to call, thus you need to supply the name of the remote service and method. In addition, you need to transport a tag in your remote call from the client side to the server side if you want to trace it end to end.
 
 On the client side, you would trace the outgoing remote call like this:
 
@@ -221,10 +216,7 @@ See the documentation for more information:
 <a name="sql-database-requests"></a>
 ### SQL database requests
 
-To trace database requests you need a database info object which stores the
-information about your database which does not change between individual
-requests. This will typically be created somewhere in your initialization code
-(after initializing the SDK):
+To trace database requests you need a database info object which stores the information about your database which does not change between individual requests. This will typically be created somewhere in your initialization code (after initializing the SDK):
 
 ```python
 
@@ -242,8 +234,7 @@ with sdk.trace_sql_database_request(dbinfo, 'SELECT foo FROM bar;') as tracer:
     tracer.set_round_trip_count(3) # Optional
 ```
 
-Note that you need to release the database info object. You can do this by
-calling `close()` on it or using it in a `with` block.
+Note that you need to release the database info object. You can do this by calling `close()` on it or using it in a `with` block.
 
 See the documentation for more information:
 
@@ -254,9 +245,7 @@ See the documentation for more information:
 <a name="incoming-web-requests"></a>
 ### Incoming web requests
 
-[Like for database infos](#sql-database-requests), to trace incoming web
-requests you need a web application info object which stores the information
-about your web application which does not change:
+[Like for database infos](#sql-database-requests), to trace incoming web requests you need a web application info object which stores the information about your web application which does not change:
 
 ```python
 wappinfo = sdk.create_web_application_info(
@@ -283,24 +272,20 @@ with wreq:
     wreq.set_status_code(200) # OK
 ```
 
-Note that you need to release the web application info object. You can do this
-by calling `close()` on it or using it in a `with` block.
+Note that you need to release the web application info object. You can do this by calling `close()` on it or using it in a `with` block.
 
-Incoming web request tracers support some more features not shown here. Be sure
-to check out the documentation:
+Incoming web request tracers support some more features not shown here. Be sure to check out the documentation:
 
 * [`create_web_application_info`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.create_web_application_info)
 * [`trace_incoming_web_request`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.trace_incoming_web_request)
 * [`IncomingWebRequestTracer`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.IncomingWebRequestTracer)
 
-There is currently no explicit support for tracing outgoing web requests. You
-can use an [outgoing remote call tracer](#remote-calls) instead.
+There is currently no explicit support for tracing outgoing web requests. You can use an [outgoing remote call tracer](#remote-calls) instead.
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-To debug your OneAgent SDK for Python  installation, execute the following
-Python code:
+To debug your OneAgent SDK for Python installation, execute the following Python code:
 
 ```python
 import oneagent
@@ -309,19 +294,13 @@ init_result = oneagent.try_init(['loglevelsdk=finest', 'loglevel=finest'])
 print('InitResult=' + repr(init_result))
 ```
 
-If you get output containing `InitResult=InitResult(status=0, error=None)`, your
-installation should be fine.
-
-Otherwise, hopefully the output is helpful in determining the issue.
+If you get output containing `InitResult=InitResult(status=0, error=None)`, your installation should be fine. Otherwise, the output is helpful in determining the issue.
 
 Known gotchas:
 
-* `ImportError` or `ModuleNotFoundError` in line 1 that says that there is no
-  module named `oneagent`.
+* `ImportError` or `ModuleNotFoundError` in line 1 that says that there is no   module named `oneagent`.
 
-  Make sure that the `pip install` or equivalent succeeded (see
-  [here](#installation)). Also make sure you use the `pip` corresponding to your
-  `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
+  Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
 
 <a name="repository-contents"></a>
 ## Repository contents
