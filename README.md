@@ -88,10 +88,7 @@ input('Please wait...')
 oneagent.shutdown()
 ```
 
-For this, follow the [provided sample
-application](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/samples/basic-sdk-sample/basic_sdk_sample.py)
-(see also Quickstart section in the
-[documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/quickstart.html)).
+A more detailed [sample application](https://github.com/Dynatrace/OneAgent-SDK-for-Python/blob/master/samples/basic-sdk-sample/basic_sdk_sample.py) is available. See also Quickstart section in the [documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/quickstart.html).
 
 
 <a name="api-concepts"></a>
