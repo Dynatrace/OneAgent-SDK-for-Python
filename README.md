@@ -1,5 +1,4 @@
-**Disclaimer: This SDK is currently still work in progress.
-Using the OneAgent SDK for Python is COMPLETELY UNSUPPORTED at this stage!**
+Disclaimer: This SDK is currently in EAP and still work in progress.
 
 > Read the latest version of this README, with working internal links, at
 [GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python#readme).
