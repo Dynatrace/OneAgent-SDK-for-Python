@@ -39,16 +39,9 @@ The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPytho
 (that is, the "normal" Python, i.e. the Python implementation from
 <https://python.org>) is supported.
 
-The Dynatrace OneAgent SDK for Python includes the [Dynatrace OneAgent SDK for
-C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C). See
-[here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements)
-for its requirements, which also apply to the SDK for Python.
+The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and included into the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
 
-The version of the SDK for C/C++ that is included in each version of the SDK for
-Python is shown in the following table. The SDK for C/C++'s requirement for the
-Dynatrace OneAgent is also shown here, for your convenience (it is the same that
-is [listed in the OneAgent SDK for C/C++'s
-documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
+The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table. The SDK for C/C++'s requirement for the Dynatrace OneAgent is also shown here, for your convenience (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
 |:----------------------|:---------------------|:-----------------|
