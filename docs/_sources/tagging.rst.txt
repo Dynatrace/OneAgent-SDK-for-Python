@@ -52,21 +52,21 @@ that communicates using a custom-built remoting protocol (e.g. over TCP/IP).
 First you would instrument the applications separately using, e.g. using the
 `trace_*` functions from :class:`oneagent.sdk.SDK` together with `with`-blocks::
 
-   from oneagent.sdk import SDK, CHANNEL_TYPE_TCP_IP, Channel
+   from oneagent.sdk import SDK, ChannelType, Channel
 
    # In the client:
    def call_remote(message):
       tracer = SDK.get().trace_outgoing_remote_call(
         'my_remote_function', 'MyRemoteService', 'MyRemoteEndpoint',
-         Channel(CHANNEL_TYPE_TCP_IP, 'example.com:12345'))
-      with tracer.start():
+         Channel(ChannelType.TCP_IP, 'example.com:12345'))
+      with tracer:
          myremotingchannel.send('my_remote_function', message)
 
    # In the server:
    def my_remote_function(message):
       tracer = SDK.get().trace_incoming_remote_call(
         'my_remote_function', 'MyRemoteService', 'MyRemoteEndpoint')
-      with tracer.start():
+      with tracer:
          do_actual_work()
 
 Now you will get two paths that will be completely unrelated from Dynatrace's
@@ -82,14 +82,14 @@ The result after doing this could look like this:
 .. code-block:: python
    :emphasize-lines: 9-10,15,17
 
-   from oneagent.sdk import SDK, CHANNEL_TYPE_TCP_IP, Channel
+   from oneagent.sdk import SDK, ChannelType, Channel
 
    # In the client:
    def call_remote(message):
       tracer = SDK.get().trace_outgoing_remote_call(
         'my_remote_function', 'MyRemoteService', 'MyRemoteEndpoint',
-         Channel(CHANNEL_TYPE_TCP_IP, 'example.com:12345'))
-      with tracer.start(): # Starts the tracer; required for obtaining a tag!
+         Channel(ChannelType.TCP_IP, 'example.com:12345'))
+      with tracer: # Starts the tracer; required for obtaining a tag!
          tag = tracer.outgoing_dynatrace_byte_tag
          message.add_header('Dynatrace-Tag', tag) # Or some such
          myremotingchannel.send('my_remote_function', message)
@@ -100,7 +100,7 @@ The result after doing this could look like this:
       tracer = SDK.get().trace_incoming_remote_call(
         'my_remote_function', 'MyRemoteService', 'MyRemoteEndpoint',
         byte_tag=tag)
-      with tracer.start():
+      with tracer:
          do_actual_work()
 
 Note these points:

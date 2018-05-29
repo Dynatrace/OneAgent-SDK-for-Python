@@ -80,21 +80,21 @@ smaller and more efficient to process by Dynatrace.</p>
 that communicates using a custom-built remoting protocol (e.g. over TCP/IP).
 First you would instrument the applications separately using, e.g. using the
 <cite>trace_*</cite> functions from <a class="reference internal" href="sdkref.html#oneagent.sdk.SDK" title="oneagent.sdk.SDK"><code class="xref py py-class docutils literal notranslate"><span class="pre">oneagent.sdk.SDK</span></code></a> together with <cite>with</cite>-blocks:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="k">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="n">Channel</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="k">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">ChannelType</span><span class="p">,</span> <span class="n">Channel</span>
 
 <span class="c1"># In the client:</span>
 <span class="k">def</span> <span class="nf">call_remote</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
    <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_outgoing_remote_call</span><span class="p">(</span>
      <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
-      <span class="n">Channel</span><span class="p">(</span><span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
-   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+      <span class="n">Channel</span><span class="p">(</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="p">:</span>
       <span class="n">myremotingchannel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
 
 <span class="c1"># In the server:</span>
 <span class="k">def</span> <span class="nf">my_remote_function</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
    <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span>
      <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">)</span>
-   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="p">:</span>
       <span class="n">do_actual_work</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -107,14 +107,14 @@ point of view. To change that, you do the following:</p>
 creating the tracer.</li>
 </ol>
 <p>The result after doing this could look like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="kn">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="n">Channel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">oneagent.sdk</span> <span class="kn">import</span> <span class="n">SDK</span><span class="p">,</span> <span class="n">ChannelType</span><span class="p">,</span> <span class="n">Channel</span>
 
 <span class="c1"># In the client:</span>
 <span class="k">def</span> <span class="nf">call_remote</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
    <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_outgoing_remote_call</span><span class="p">(</span>
      <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
-      <span class="n">Channel</span><span class="p">(</span><span class="n">CHANNEL_TYPE_TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
-   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span> <span class="c1"># Starts the tracer; required for obtaining a tag!</span>
+      <span class="n">Channel</span><span class="p">(</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">TCP_IP</span><span class="p">,</span> <span class="s1">&#39;example.com:12345&#39;</span><span class="p">))</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="p">:</span> <span class="c1"># Starts the tracer; required for obtaining a tag!</span>
 <span class="hll">      <span class="n">tag</span> <span class="o">=</span> <span class="n">tracer</span><span class="o">.</span><span class="n">outgoing_dynatrace_byte_tag</span>
 </span><span class="hll">      <span class="n">message</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s1">&#39;Dynatrace-Tag&#39;</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span> <span class="c1"># Or some such</span>
 </span>      <span class="n">myremotingchannel</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
@@ -125,7 +125,7 @@ creating the tracer.</li>
 </span>   <span class="n">tracer</span> <span class="o">=</span> <span class="n">SDK</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">trace_incoming_remote_call</span><span class="p">(</span>
 <span class="hll">     <span class="s1">&#39;my_remote_function&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteService&#39;</span><span class="p">,</span> <span class="s1">&#39;MyRemoteEndpoint&#39;</span><span class="p">,</span>
 </span>     <span class="n">byte_tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
-   <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start</span><span class="p">():</span>
+   <span class="k">with</span> <span class="n">tracer</span><span class="p">:</span>
       <span class="n">do_actual_work</span><span class="p">()</span>
 </pre></div>
 </div>
