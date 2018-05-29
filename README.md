@@ -36,7 +36,7 @@ The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPytho
 
 The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and delivered with the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
 
-The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table. required Dynatrace OneAgent version is also shown here (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
+The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table along with the required Dynatrace OneAgent version (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
 |:----------------------|:---------------------|:-----------------|
@@ -112,7 +112,7 @@ See the API documentation for the [`try_init` function](https://dynatrace.github
 
 To use the SDK, get a reference to the [`SDK`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK)
 singleton by calling its static [`get`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.get)
-static method. The first thing you may want to do with this object, is checking if the agent is active by comparing the value of the
+method. The first thing you may want to do with this object, is checking if the agent is active by comparing the value of the
 [`agent_state`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.agent_state)
 property to the [`oneagent.common.AgentState`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.common.AgentState) constants.
 
@@ -164,15 +164,15 @@ strings. Byte strings must always use the UTF-8 encoding!
 <a name="features-and-how-to-use-them"></a>
 ## Features and how to use them
 
-The feature sets differ slightly with each language implementation. More functionality will be added over time, see <a href="https://answers.dynatrace.com/spaces/483/dynatrace-product-ideas/idea/198106/planned-features-for-oneagent-sdk.html" target="_blank">Planned features for OneAgent SDK</a> for details on upcoming features.
+The feature sets differ slightly with each language implementation. More functionality will be added over time, see [Planned features for OneAgent SDK](https://answers.dynatrace.com/spaces/483/dynatrace-product-ideas/idea/198106/planned-features-for-oneagent-sdk.html) for details on upcoming features.
 
 A more detailed specification of the features can be found in [Dynatrace OneAgent SDK](https://github.com/Dynatrace/OneAgent-SDK#features).
 
-|Feature|Required OneAgent SDK for Python version|
-|:------|:--------|
-|Trace incoming and outgoing remote calls  |>=1.0.0  |
-|SQL database requests  |>=1.0.0  |
-|Incoming web requests  |>=1.0.0  |
+|Feature    |Required OneAgent SDK for Python version|
+|:-----------------------------------------|:--------|
+|Trace incoming and outgoing remote calls  |≥1.0.0   |
+|SQL database requests                     |≥1.0.0   |
+|Incoming web requests                     |≥1.0.0   |
 
 <a name="remote-calls"></a>
 ### Remote calls
@@ -289,7 +289,7 @@ To debug your OneAgent SDK for Python installation, execute the following Python
 
 ```python
 import oneagent
-oneagent.logger.setLevel(0)
+oneagent.logger.setLevel(1)
 init_result = oneagent.try_init(['loglevelsdk=finest', 'loglevel=finest'])
 print('InitResult=' + repr(init_result))
 ```
@@ -298,7 +298,7 @@ If you get output containing `InitResult=InitResult(status=0, error=None)`, your
 
 Known gotchas:
 
-* `ImportError` or `ModuleNotFoundError` in line 1 that says that there is no   module named `oneagent`.
+* `ImportError` or `ModuleNotFoundError` in line 1 that says that there is no module named `oneagent`.
 
   Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
 

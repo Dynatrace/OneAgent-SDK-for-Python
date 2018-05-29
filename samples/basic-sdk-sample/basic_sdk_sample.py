@@ -48,19 +48,14 @@ def outgoing_remote_call(success):
             # Note that this property can only be accessed after starting the
             # tracer. See the documentation on tagging for more information.
             strtag = call.outgoing_dynatrace_string_tag
-
-            if not success:
-                # This demonstrates how an exception leaving a tracer's
-                # with-block will mark the tracer as failed.
-                raise RuntimeError('remote error message')
-            do_remote_call(strtag)
+            do_remote_call(strtag, success)
     except RuntimeError: # Swallow the exception raised above.
         pass
     print('-remote')
 
-failed = [False]
+failed = [None]
 
-def do_remote_call_thread_func(strtag):
+def do_remote_call_thread_func(strtag, success):
     try:
         print('+thread')
         # We use positional arguments to specify required values and named
@@ -70,6 +65,8 @@ def do_remote_call_thread_func(strtag):
             'dupypr://localhost/dummyEndpoint',
             protocol_name='DUMMY_PY_PROTOCOL', str_tag=strtag)
         with incall:
+            if not success:
+                raise RuntimeError('Remote call failed on the server side.')
             dbinfo = getsdk().create_database_info(
                 'Northwind', onesdk.DatabaseVendor.SQLSERVER,
                 onesdk.Channel(onesdk.ChannelType.TCP_IP, '10.0.0.42:6666'))
@@ -92,26 +89,28 @@ def do_remote_call_thread_func(strtag):
                     "UPDATE baz SET foo = foo + 1 WHERE qux = 23;")
                 traced_db_operation(dbinfo, "COMMIT;")
         print('-thread')
-    except Exception:
-        failed[0] = True
+    except Exception as e:
+        failed[0] = e
         raise
 
 
-def do_remote_call(strtag):
+def do_remote_call(strtag, success):
     # This function simulates doing a remote call by calling a function
     # do_remote_call_thread_func in another thread, passing a string tag. See
     # the documentation on tagging for more information.
 
+    failed[0] = None
     workerthread = threading.Thread(
         target=do_remote_call_thread_func,
-        args=(strtag,))
+        args=(strtag, success))
     workerthread.start()
 
     # Note that we need to join the thread, as all tagging assumes synchronous
     # calls.
     workerthread.join()
 
-    assert not failed[0]
+    if failed[0] is not None:
+        raise failed[0] #pylint:disable=raising-bad-type
 
 def mock_incoming_web_request():
     sdk = getsdk()
