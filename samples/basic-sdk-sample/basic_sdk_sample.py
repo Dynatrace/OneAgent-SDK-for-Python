@@ -8,6 +8,7 @@ import threading
 
 import oneagent # SDK initialization functions
 import oneagent.sdk as onesdk # All other SDK functions.
+import logging
 
 try: # Python 2 compatibility.
     input = raw_input #pylint:disable=redefined-builtin
@@ -146,6 +147,9 @@ def mock_incoming_web_request():
 
 def main():
     print('+main')
+
+    oneagent.logger.setLevel(1)
+    oneagent.logger.addHandler(logging.StreamHandler())
 
     # This gathers arguments prefixed with '--dt_' from sys.argv into the
     # returned list. See try_init below.
