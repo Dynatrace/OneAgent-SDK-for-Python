@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quickstart &#8212; Dynatrace OneAgent and SDK for Python 1.0.0 documentation</title>
+    <title>Quickstart &#8212; Dynatrace OneAgent and SDK for Python 1.0.0.dev0 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" src="_static/documentation_options.js"></script>
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for Dynatrace OneAgent SDK for Python"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0.0.dev0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -95,19 +95,14 @@
             <span class="c1"># Note that this property can only be accessed after starting the</span>
             <span class="c1"># tracer. See the documentation on tagging for more information.</span>
             <span class="n">strtag</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">outgoing_dynatrace_string_tag</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
-                <span class="c1"># This demonstrates how an exception leaving a tracer&#39;s</span>
-                <span class="c1"># with-block will mark the tracer as failed.</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;remote error message&#39;</span><span class="p">)</span>
-            <span class="n">do_remote_call</span><span class="p">(</span><span class="n">strtag</span><span class="p">)</span>
+            <span class="n">do_remote_call</span><span class="p">(</span><span class="n">strtag</span><span class="p">,</span> <span class="n">success</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span> <span class="c1"># Swallow the exception raised above.</span>
         <span class="k">pass</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-remote&#39;</span><span class="p">)</span>
 
-<span class="n">failed</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+<span class="n">failed</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
 
-<span class="k">def</span> <span class="nf">do_remote_call_thread_func</span><span class="p">(</span><span class="n">strtag</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">do_remote_call_thread_func</span><span class="p">(</span><span class="n">strtag</span><span class="p">,</span> <span class="n">success</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;+thread&#39;</span><span class="p">)</span>
         <span class="c1"># We use positional arguments to specify required values and named</span>
@@ -117,6 +112,8 @@
             <span class="s1">&#39;dupypr://localhost/dummyEndpoint&#39;</span><span class="p">,</span>
             <span class="n">protocol_name</span><span class="o">=</span><span class="s1">&#39;DUMMY_PY_PROTOCOL&#39;</span><span class="p">,</span> <span class="n">str_tag</span><span class="o">=</span><span class="n">strtag</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">incall</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Remote call failed on the server side.&#39;</span><span class="p">)</span>
             <span class="n">dbinfo</span> <span class="o">=</span> <span class="n">getsdk</span><span class="p">()</span><span class="o">.</span><span class="n">create_database_info</span><span class="p">(</span>
                 <span class="s1">&#39;Northwind&#39;</span><span class="p">,</span> <span class="n">onesdk</span><span class="o">.</span><span class="n">DatabaseVendor</span><span class="o">.</span><span class="n">SQLSERVER</span><span class="p">,</span>
                 <span class="n">onesdk</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="n">onesdk</span><span class="o">.</span><span class="n">ChannelType</span><span class="o">.</span><span class="n">TCP_IP</span><span class="p">,</span> <span class="s1">&#39;10.0.0.42:6666&#39;</span><span class="p">))</span>
@@ -139,26 +136,28 @@
                     <span class="s2">&quot;UPDATE baz SET foo = foo + 1 WHERE qux = 23;&quot;</span><span class="p">)</span>
                 <span class="n">traced_db_operation</span><span class="p">(</span><span class="n">dbinfo</span><span class="p">,</span> <span class="s2">&quot;COMMIT;&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-thread&#39;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
         <span class="k">raise</span>
 
 
-<span class="k">def</span> <span class="nf">do_remote_call</span><span class="p">(</span><span class="n">strtag</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">do_remote_call</span><span class="p">(</span><span class="n">strtag</span><span class="p">,</span> <span class="n">success</span><span class="p">):</span>
     <span class="c1"># This function simulates doing a remote call by calling a function</span>
     <span class="c1"># do_remote_call_thread_func in another thread, passing a string tag. See</span>
     <span class="c1"># the documentation on tagging for more information.</span>
 
+    <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">workerthread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
         <span class="n">target</span><span class="o">=</span><span class="n">do_remote_call_thread_func</span><span class="p">,</span>
-        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">strtag</span><span class="p">,))</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">strtag</span><span class="p">,</span> <span class="n">success</span><span class="p">))</span>
     <span class="n">workerthread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
     <span class="c1"># Note that we need to join the thread, as all tagging assumes synchronous</span>
     <span class="c1"># calls.</span>
     <span class="n">workerthread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
-    <span class="k">assert</span> <span class="ow">not</span> <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">failed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#pylint:disable=raising-bad-type</span>
 
 <span class="k">def</span> <span class="nf">mock_incoming_web_request</span><span class="p">():</span>
     <span class="n">sdk</span> <span class="o">=</span> <span class="n">getsdk</span><span class="p">()</span>
@@ -289,7 +288,7 @@ for more information.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to the documentation for Dynatrace OneAgent SDK for Python"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Dynatrace OneAgent and SDK for Python 1.0.0.dev0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
