@@ -32,7 +32,9 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
 <a name="requirements"></a>
 ## Requirements
 
-The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation from <https://python.org>) is supported.
+The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
+from <https://python.org>) is supported and only on Linux (musl libc is currently not supported) and Windows with the x86 (including
+x86-64) architecture.
 
 The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and delivered with the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
 
@@ -371,3 +373,5 @@ Summary: This software is licensed under the terms of the Apache License Version
 2.0 and comes bundled with the [six library by Benjamin
 Peterson](http://six.readthedocs.io/), which is licensed under the terms of the
 MIT license.
+
+<!-- vim: set tw=140 linebreak: -->
