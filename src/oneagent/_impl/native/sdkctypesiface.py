@@ -57,10 +57,15 @@ class CCString(ctypes.Structure):
             return cls.from_u8_bytes(pystr)
         if pystr is None:
             return NULL_STR
-        assert isinstance(pystr, six.text_type), \
-            'Attempt to pass non-string type to SDK function expecting a' \
-            ' string. Actual type: ' + str(type(pystr))
-        return cls.from_unicode(pystr)
+        if isinstance(pystr, six.text_type):
+            return cls.from_unicode(pystr)
+        # PyPy sometimes auto-converts, e.g. when assigning to an array
+        # For these cases, it is nice when from_param is idempotent.
+        if isinstance(pystr, cls):
+            return pystr
+        raise ValueError(
+            'Attempt to pass non-string type to SDK function expecting a'
+            ' string. Actual type: ' + str(type(pystr)))
 
     @classmethod
     def from_u8_bytes(cls, pybstr):
