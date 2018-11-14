@@ -20,6 +20,8 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
   * [SQL database requests](#sql-database-requests)
   * [Incoming web requests](#incoming-web-requests)
 - [Troubleshooting](#troubleshooting)
+  * [Installation issues](#installation-issues)
+  * [Post-installation issues](#post-installation-issues)
 - [Repository contents](#repository-contents)
 - [Help & Support](#help--support)
   * [Read the manual](#read-the-manual)
@@ -34,11 +36,13 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
 
 The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
 from <https://python.org>) is supported and only on Linux (musl libc is currently not supported) and Windows with the x86 (including
-x86-64) architecture.
+x86-64) architecture. Additionally, `pip` ≥ 8.1.0 (2016-03-05) is required for installation.
 
 The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) and therefore the SDK for C/C++ is required and delivered with the Python SDK. See [here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements) for its requirements, which also apply to the SDK for Python.
 
 The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table along with the required Dynatrace OneAgent version (it is the same as [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
+
+<a name="pycversiontab"></a>
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
 |:----------------------|:---------------------|:-----------------|
@@ -287,6 +291,27 @@ There is currently no explicit support for tracing outgoing web requests. You ca
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
+### Installation issues
+
+* `ValueError` when installing, complaining about missing `DT_PYSDK_CSDK_PATH`.
+
+  Make sure you are using pip to install a prebuilt package wheel for your system from PyPI, as described in [Using the OneAgent SDK for
+  Python in your application](#installation). Also make sure you are using an up-to date version of `pip`, `setuptools` and `wheel`. You can
+  try upgrading them with `python -m pip install --upgrade pip setuptools wheel` (make sure to use the same `python` that you use to install
+  the `oneagent-sdk` package). ATTENTION: If you use the system-provided pip (e.g. installed via `apt-get` on Ubuntu) you should instead use
+  a `pip` inside a `virtualenv` (the same as your project), as uprading system-provided packages via `pip` may cause issues.
+
+  If this does not resolve the issue, make sure you are using a supported platform, as listed in [Requirements](#requirements). If you *are*
+  using a supported system, you can try downloading the [OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) in the
+  version corresponding to your OneAgent SDK for Python as listed in [the table in Requirements](#requirements). Then set the
+  `DT_PYSDK_CSDK_PATH` environment variable to the `.so`/`.dll` file corresponding to your platform in the `lib` subdirectory of the C SDK
+  and retry the installation (e.g. in a bash shell, use `export DT_PYSDK_CSDK_PATH=path/to/onesdk_shared.so`). If there is no corresponding
+  directory, your platfom is not supported. Otherwise, regardless if it works with that method or not, please report an issue as desribed in
+  [Let us help you](#let-us-help-you).
+
+
+### Post-installation issues
+
 To debug your OneAgent SDK for Python installation, execute the following Python code:
 
 ```python
@@ -303,6 +328,7 @@ Known gotchas:
 * `ImportError` or `ModuleNotFoundError` in line 1 that says that there is no module named `oneagent`.
 
   Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
+
 
 <a name="repository-contents"></a>
 ## Repository contents
