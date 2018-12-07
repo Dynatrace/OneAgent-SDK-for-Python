@@ -1,3 +1,18 @@
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import print_function
 
 import os
@@ -7,12 +22,18 @@ import pytest
 
 import oneagent
 from oneagent._impl.native import nativeagent
-from oneagent._impl.native.sdkmockiface import SDKMockInterface
 from oneagent._impl import six
 from oneagent import common as sdkcommon
 import oneagent._impl.native.sdkctypesiface as csdk
-import oneagent._impl.native.sdkmockiface as msdk
 import oneagent._impl.native.sdknulliface as nsdk
+
+import sdkmockiface as msdk
+from sdkmockiface import SDKMockInterface
+
+try:
+    getfullargspec = inspect.getfullargspec
+except AttributeError:
+    getfullargspec = inspect.getargspec
 
 ignoredmods = set([
     'oneagent.launch_by_import',
@@ -21,6 +42,8 @@ ignoredmods = set([
 @pytest.fixture(scope='module', autouse=True)
 def set_sdk():
     nativeagent.initialize(SDKMockInterface())
+    yield set_sdk
+    nativeagent._force_initialize(None) #pylint:disable=protected-access
 
 def test_import_all():
     pkgroot = path.dirname(oneagent.__file__)
@@ -73,7 +96,7 @@ def argstr(func):
     #pylint:disable=deprecated-method
     if not inspect.ismethod(func) and not inspect.isfunction(func):
         return '({})'.format(', '.join(len(func.argtypes) * ['arg']))
-    spec = inspect.getargspec(func)
+    spec = getfullargspec(func)
     if spec.args and spec.args[0] == 'self':
         #pylint:disable=no-member,protected-access
         spec = spec._replace(args=spec.args[1:])

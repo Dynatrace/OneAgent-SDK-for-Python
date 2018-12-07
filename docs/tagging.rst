@@ -22,12 +22,13 @@ The following classes are incoming-taggable:
 
 - :class:`IncomingRemoteCallTracer` /
   :meth:`oneagent.sdk.SDK.trace_incoming_remote_call`
-- :class:`IncomingWebRequestTracer` / 
+- :class:`IncomingWebRequestTracer` /
   :meth:`oneagent.sdk.SDK.trace_incoming_web_request`
 
 The following classes are :class:`OutgoingTaggable`:
 
 - :class:`OutgoingRemoteCallTracer`
+- :class:`OutgoingWebRequestTracer`
 
 You first use either :attr:`OutgoingTaggable.outgoing_dynatrace_string_tag` or
 :attr:`OutgoingTaggable.outgoing_dynatrace_byte_tag` to retrieve a string or
@@ -80,7 +81,7 @@ point of view. To change that, you do the following:
 The result after doing this could look like this:
 
 .. code-block:: python
-   :emphasize-lines: 9-10,15,17
+   :emphasize-lines: 9-10,15,18
 
    from oneagent.sdk import SDK, ChannelType, Channel
 

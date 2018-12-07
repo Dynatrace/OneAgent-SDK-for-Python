@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''oneagent main module. Contains initialization and logging functionality.
 
 .. data:: logger
@@ -7,13 +22,13 @@
     written.
 
     This logger has set the log level so that no messages are displayed by
-    default. Use e.g. :code:`oneagent.logger.setLevel(logging.INFO)` to see
-    them. See :ref:`logging-basic-tutorial` in the official Python
+    default. Use, for example, :code:`oneagent.logger.setLevel(logging.INFO)` to
+    see them. See :ref:`logging-basic-tutorial` in the official Python
     documentation for more on configuring the logger.
 
 .. class:: InitResult
 
-    Information about the success of a call to :func:`.try_init`. Instances of
+    Information about the success of a call to :func:`.initialize`. Instances of
     this class are falsy iff :attr:`.status` is negative.
 
     .. attribute:: status
@@ -50,14 +65,14 @@
     .. data:: STATUS_INITIALIZED_WITH_WARNING
 
         A positive status code meaning that the SDK has sucessfully been
-        initialized, but there have been some warnings (e.g. some options could
+        initialized, but there have been some warnings (e.g., some options could
         not be processed, or the agent is permanently inactive).
 
     .. data:: STATUS_ALREADY_INITIALIZED
 
         A positive status code meaning that the SDK has already been initialized
-        (not necessarily with success), i.e. :func:`try_init` has already been
-        called (possibly implicitly via :meth:`oneagent.sdk.SDK.get`).
+        (not necessarily with success), i.e., :func:`initialize` has already been
+        called.
         :attr:`error` is always :data:`None` with this status.
 '''
 
@@ -68,12 +83,14 @@ from threading import Lock
 
 from oneagent._impl.six.moves import range #pylint:disable=import-error
 
-from .common import SDKError, ErrorCode
+from .common import SDKError, SDKInitializationError, ErrorCode
 from ._impl.native import nativeagent
+from ._impl.native.nativeagent import try_get_sdk
+from ._impl.native.sdknulliface import SDKNullInterface
 
 # See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
 # Dependency Specification"
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default
@@ -92,10 +109,13 @@ class InitResult(namedtuple('InitResult', 'status error')):
 
 _sdk_ref_lk = Lock()
 _sdk_ref_count = 0
+_should_shutdown = False
+
+_sdk_instance = None
 
 def sdkopts_from_commandline(argv=None, remove=False, prefix='--dt_'):
     '''Creates a SDK option list for use with the :code:`sdkopts` parameter of
-    :func:`.try_init` from a list :code:`argv` of command line parameters.
+    :func:`.initialize` from a list :code:`argv` of command line parameters.
 
     An element in :code:`argv` is treated as an SDK option if starts with
     :code:`prefix`. The return value of this function will then contain the
@@ -131,21 +151,38 @@ def sdkopts_from_commandline(argv=None, remove=False, prefix='--dt_'):
     result.reverse()
     return result
 
+def get_sdk():
+    '''Returns a shared :class:`oneagent.sdk.SDK` instance.
 
-def try_init(sdkopts=(), sdklibname=None):
+    Repeated calls to this function are supported and will always return the
+    same object.
+
+    .. note:: You have to initialize the SDK first using :meth:`initialize`
+        before this function will return a valid SDK instance.
+
+    .. versionadded:: 1.1.0
+    '''
+    global _sdk_instance #pylint:disable=global-statement
+
+    if _sdk_instance is None:
+        return SDK(SDKNullInterface())
+
+    return _sdk_instance
+
+def initialize(sdkopts=(), sdklibname=None):
     '''Attempts to initialize the SDK with the specified options.
 
     Even if initialization fails, a dummy SDK will be available so that SDK
     functions can be called but will do nothing.
 
     If you call this function multiple times, you must call :func:`shutdown`
-    just as many times. The options from all but the first :code:`try_init` call
+    just as many times. The options from all but the first :code:`initialize` call
     will be ignored (the return value will have the
     :data:`InitResult.STATUS_ALREADY_INITIALIZED` status code in that case).
 
     :param sdkopts: A sequence of strings of the form
         :samp:`{NAME}={VALUE}` that set the given SDK options. Igored in all but
-        the first :code:`try_init` call.
+        the first :code:`initialize` call.
     :type sdkopts: ~typing.Iterable[str]
     :param str sdklibname: The file or directory name of the native C SDK
         DLL. If None, the shared library packaged directly with the agent is
@@ -157,14 +194,20 @@ def try_init(sdkopts=(), sdklibname=None):
     '''
 
     global _sdk_ref_count #pylint:disable=global-statement
+    global _sdk_instance #pylint:disable=global-statement
 
     with _sdk_ref_lk:
+        logger.debug("initialize: ref count = %d", _sdk_ref_count)
         result = _try_init_noref(sdkopts, sdklibname)
+        if _sdk_instance is None:
+            _sdk_instance = SDK(try_get_sdk())
         _sdk_ref_count += 1
     return result
 
 
 def _try_init_noref(sdkopts=(), sdklibname=None):
+    global _should_shutdown #pylint:disable=global-statement
+
     sdk = nativeagent.try_get_sdk()
     if sdk:
         logger.debug(
@@ -194,25 +237,31 @@ def _try_init_noref(sdkopts=(), sdklibname=None):
                     sdk.strerror(err))
 
         nativeagent.checkresult(sdk, sdk.initialize(), 'onesdk_initialize')
+        _should_shutdown = True
+        logger.debug("initialize successful")
         return InitResult(
             (InitResult.STATUS_INITIALIZED_WITH_WARNING if have_warning else
              InitResult.STATUS_INITIALIZED),
             None)
     except Exception as e: #pylint:disable=broad-except
+        _should_shutdown = False
         #pylint:disable=no-member
         if isinstance(e, SDKError) and e.code == ErrorCode.AGENT_NOT_ACTIVE:
         #pylint:enable=no-member
+            logger.debug("initialized, but agent not active")
             return InitResult(InitResult.STATUS_INITIALIZED_WITH_WARNING, e)
         logger.exception('Failed initializing agent.')
         sdk = nativeagent.try_get_sdk()
         if sdk:
             logger.warning('Continuing with stub-SDK only.')
             return InitResult(InitResult.STATUS_INIT_ERROR, e)
-        from ._impl.native.sdknulliface import SDKNullInterface
-        nativeagent.initialize(SDKNullInterface())
+
+        _v = '-/-' if not isinstance(e, SDKInitializationError) else e.agent_version
+
+        nativeagent.initialize(SDKNullInterface(version=_v))
+
         logger.warning('Continuing with NULL-SDK only.')
         return InitResult(InitResult.STATUS_STUB_LOAD_ERROR, e)
-
 
 def shutdown():
     '''Shut down the SDK.
@@ -222,21 +271,37 @@ def shutdown():
     :rtype: Exception
     '''
     global _sdk_ref_count #pylint:disable=global-statement
+    global _sdk_instance #pylint:disable=global-statement
+    global _should_shutdown #pylint:disable=global-statement
 
     with _sdk_ref_lk:
+        logger.debug("shutdown: ref count = %d, should_shutdown = %s", \
+                     _sdk_ref_count, _should_shutdown)
         nsdk = nativeagent.try_get_sdk()
         if not nsdk:
+            logger.warning('shutdown: SDK not initialized or already shut down')
+            _sdk_ref_count = 0
             return None
         if _sdk_ref_count > 1:
+            logger.debug('shutdown: reference count is now %d', _sdk_ref_count)
             _sdk_ref_count -= 1
             return None
+        logger.info('shutdown: Shutting down SDK.')
         try:
-            nativeagent.checkresult(nsdk, nsdk.shutdown(), 'shutdown')
+            if _should_shutdown:
+                _rc = nsdk.shutdown()
+                if _rc == ErrorCode.NOT_INITIALIZED:
+                    logger.warning('shutdown: native SDK was not initialized')
+                else:
+                    nativeagent.checkresult(nsdk, _rc, 'shutdown')
+                _should_shutdown = False
         except SDKError as e:
             logger.warning('shutdown failed', exc_info=sys.exc_info())
             return e
         _sdk_ref_count = 0
+        _sdk_instance = None
         nativeagent._force_initialize(None) #pylint:disable=protected-access
+        logger.debug('shutdown: completed')
         return None
 
 #pylint:disable=wrong-import-position

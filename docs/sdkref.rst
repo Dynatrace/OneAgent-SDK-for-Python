@@ -8,7 +8,7 @@ Module :code:`oneagent` (initialization)
 ----------------------------------------
 
 .. automodule:: oneagent
-  :members: sdkopts_from_commandline, try_init, shutdown
+  :members: sdkopts_from_commandline, get_sdk, initialize, shutdown
 
 ..
   .. autofunction:: oneagent.start_agent

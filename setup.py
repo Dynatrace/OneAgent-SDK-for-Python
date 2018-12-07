@@ -1,4 +1,18 @@
 #! /usr/bin/env python3
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 # Beware when cross-building 64/32 bit:
 # When using --plat-name to override this, make sure to `rm -r build` othewise
@@ -17,12 +31,16 @@ import re
 #pylint:disable=no-name-in-module,import-error
 from distutils.util import get_platform
 from distutils.command.build import build
+from distutils import log as distlog
 #pylint:enable=no-name-in-module,import-error
 
 
 from setuptools import setup, find_packages, Distribution
 from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
+
+from pkg_resources import parse_version
+
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -48,7 +66,40 @@ with io.open(verfilepath, encoding='utf-8') as verfile:
             break
     else:
         raise AssertionError('Version not found in src/oneagent/__init__.py')
+
 del match, verfile, verfilepath, VER_RE
+if __version__ != str(parse_version(__version__)):
+    raise AssertionError(
+        'Version {} normalizes to {}'.format(
+            __version__, parse_version(__version__)))
+
+
+def unsupported_msg(plat_name):
+    try:
+        import pip
+        pipver = pip.__version__
+    except Exception: #pylint:disable=broad-except
+        pipver = 'Unknown or not using pip'
+
+    return '''
+
+******************************************************************************
+*** You are trying to build the Python SDK from source.                    ***
+*** This could mean that you are using an outdated version of pip (older   ***
+*** than 8.1.0) or you are attempting to install the SDK on an             ***
+*** unsupported platform. Please check the requirements at                 ***
+*** https://github.com/Dynatrace/OneAgent-SDK-for-Python#requirements      ***
+******************************************************************************
+Your pip version:     {pipver}
+Your target platform: {plat}
+
+If you are intentionally building from source, download the OneAgent SDK for
+C/C++ that corresponds to this Python SDK (v{v}; see table at
+https://github.com/Dynatrace/OneAgent-SDK-for-Python#requirements) from
+https://github.com/Dynatrace/OneAgent-SDK-for-C and set the environment variable
+{env} to the path to the shared library/DLL correponding to the platform you are
+building for.'''.format(
+    v=__version__, plat=plat_name, env=CSDK_ENV_NAME, pipver=pipver)
 
 
 def compilefile(fname, mode='exec'):
@@ -85,9 +136,8 @@ if bdist_wheel is not None:
 
 def get_dll_info(plat_name):
     dll_info = {}
-    #pylint:disable=exec-used
     infopath = path.join(_THIS_DIR, 'src/oneagent/_impl/native/sdkdllinfo.py')
-    exec(compilefile(infopath), dll_info)
+    exec(compilefile(infopath), dll_info) #pylint:disable=exec-used
     if plat_name:
         is_win32 = plat_name.startswith('win')
         is_64bit = plat_name.endswith('64')
@@ -96,14 +146,56 @@ def get_dll_info(plat_name):
     return dll_info
 
 def get_dll_input_path(plat_name):
+    dll_info = get_dll_info(plat_name) # Do this before defaulting plat_name
+    plat_name = plat_name or get_platform()
     sdkpath = os.getenv(CSDK_ENV_NAME)
     if not sdkpath:
+        warn_msg = unsupported_msg(plat_name)
+        distlog.error(warn_msg)
+        raise ValueError(warn_msg)
+    if path.isfile(sdkpath):
+        return sdkpath
+    if not path.exists(sdkpath):
         raise ValueError(
-            'Need to set {} to point to SDK stub shared library.'.format(
-                CSDK_ENV_NAME))
-    if path.isdir(sdkpath):
-        return get_dll_info(plat_name)['_dll_name_in_home'](sdkpath)
-    return sdkpath
+            '****** Path "{}" in ${} does not exist. ******'.format(
+                sdkpath, CSDK_ENV_NAME))
+    if not dll_info['WIN32'] and 'linux' not in plat_name:
+        raise ValueError(
+            '****** Your platform ({}) is not supported by the '
+            'native SDK (its OS is neither Linux nor Windows). ******'.format(
+                plat_name))
+    if '86' not in plat_name and 'amd64' not in plat_name.lower() \
+            and plat_name != 'win32':
+        raise ValueError(
+            '****** Your platform ({}) is not supported by the '
+            'native SDK (its CPU is not x86/AMD64-based). ******'.format(
+                plat_name))
+
+    # Try native SDK distribution package-like
+    nsdk_platname = '{}-x86_{}'.format(
+        'windows' if dll_info['WIN32'] else 'linux',
+        '64' if dll_info['IS64BIT'] else '32')
+
+    basename = dll_info['dll_name']()
+    fname = path.join(sdkpath, 'lib', nsdk_platname, basename)
+    if path.exists(fname):
+        return fname
+
+    fname = path.join(sdkpath, nsdk_platname, basename)
+    if path.exists(fname):
+        return fname
+
+    # Try DT_HOME-like path.
+    fname = dll_info['_dll_name_in_home'](sdkpath)
+    if path.exists(fname):
+        return fname
+
+    # Recommended, however, is setting the environment variable to the filename,
+    # which is the only way we recommend here.
+    raise ValueError(
+        '****** ${} is set to a directory with unknown content.'
+        ' Please set it to the full path to {}'
+        ' (including filename) instead. ******'.format(CSDK_ENV_NAME, basename))
 
 class PostBuildCommand(build):
     __base = build
@@ -188,7 +280,7 @@ def main():
         package_dir={'': 'src'},
         include_package_data=True,
         zip_safe=True,
-        python_requires='>=2.7,!=3.0,!=3.1,!=3.2,!=3.3',
+        python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
         cmdclass=cmdclss,
         name='oneagent-sdk',
         version=__version__,
@@ -211,7 +303,6 @@ def main():
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.3',
             'Programming Language :: Python :: 3.4',
             'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',

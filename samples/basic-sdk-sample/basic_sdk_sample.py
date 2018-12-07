@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''This example demonstrates instrumenting a (mocked) application that executes
 a remote call that sometimes fails and does some database operations.'''
 
@@ -8,14 +23,13 @@ import threading
 
 import oneagent # SDK initialization functions
 import oneagent.sdk as onesdk # All other SDK functions.
-import logging
 
 try: # Python 2 compatibility.
     input = raw_input #pylint:disable=redefined-builtin
 except NameError:
     pass
 
-getsdk = onesdk.SDK.get # Just to make the code shorter.
+getsdk = oneagent.get_sdk # Just to make the code shorter.
 
 def traced_db_operation(dbinfo, sql):
     print('+db', dbinfo, sql)
@@ -144,49 +158,103 @@ def mock_incoming_web_request():
             wreq.add_response_headers({'Content-Length': '1234'})
             wreq.set_status_code(200) # OK
 
+            # Add 3 different custom attributes.
+            sdk.add_custom_request_attribute('custom int attribute', 42)
+            sdk.add_custom_request_attribute('custom float attribute', 1.778)
+            sdk.add_custom_request_attribute('custom string attribute', 'snow is falling')
+
+            # This call will trigger the diagnostic callback.
+            sdk.add_custom_request_attribute('another key', None)
+
+def _process_my_outgoing_request(_tag):
+    pass
+
+def mock_outgoing_web_request():
+    sdk = getsdk()
+
+    # Create tracer and and request headers.
+    tracer = sdk.trace_outgoing_web_request('http://example.com/their-web-app/bar?foo=foz', 'GET',
+                                            headers={'X-not-a-useful-header': 'python-was-here'})
+
+    with tracer:
+        # Now get the outgoing dynatrace tag. You have to add this tag as request header to your
+        # request if you want that the path is continued on the receiving site. Use the constant
+        # oneagent.common.DYNATRACE_HTTP_HEADER_NAME as request header name.
+        tag = tracer.outgoing_dynatrace_string_tag
+
+        # Here you process and send your web request.
+        _process_my_outgoing_request(tag)
+
+        # As soon as the response is received, you can add the response headers to the
+        # tracer and you shouldn't forget to set the status code, too.
+        tracer.add_response_headers({'Content-Length': '1234'})
+        tracer.set_status_code(200) # OK
+
+def _diag_callback(text):
+    print(text)
 
 def main():
     print('+main')
 
-    oneagent.logger.setLevel(1)
-    oneagent.logger.addHandler(logging.StreamHandler())
-
     # This gathers arguments prefixed with '--dt_' from sys.argv into the
-    # returned list. See try_init below.
+    # returned list. See initialize below.
     sdk_options = oneagent.sdkopts_from_commandline(remove=True)
 
-    # If you do not call try_init() manually, the first call to
-    # oneagent.sdk.SDK.get() will attempt to initialize the SDK with default
-    # options, swallowing any errors, which is why manually calling try_init()
-    # is recommended.
+    # Before using the SDK you have to initialize the OneAgent. You can call oneagent.initialize()
+    # as often as you want, but you also have to call oneagent.shutdown() for every call to
+    # initialize() as well.
+    #
     # Passing in the sdk_options is entirely optional and usually not required
     # as all settings will be automatically provided by the Dynatrace OneAgent
     # that is installed on the host.
-    init_result = oneagent.try_init(sdk_options)
+    init_result = oneagent.initialize(sdk_options)
     try:
         if init_result.error is not None:
             print('Error during SDK initialization:', init_result.error)
 
         # While not by much, it is a bit faster to cache the result of
-        # oneagent.sdk.SDK.get() instead of calling the function multiple times.
+        # oneagent.get_sdk() instead of calling the function multiple times.
         sdk = getsdk()
+
+        # Set the diagnostic callback.
+        sdk.set_diagnostic_callback(_diag_callback)
 
         # The agent state is one of the integers in oneagent.sdk.AgentState.
         print('Agent state:', sdk.agent_state)
 
-        # The agent version is the version of the installed OneAgent, not the
-        # version of the SDK.
+        # The instance attribute 'agent_found' indicates whether an agent could be found or not.
+        print('Agent found:', sdk.agent_found)
+
+        # If an agent was found but it is incompatible with this version of the SDK for Python
+        # then 'agent_is_compatible' would be set to false.
+        print('Agent is compatible:', sdk.agent_is_compatible)
+
+        # The agent version is a string holding both the OneAgent version and the
+        # OneAgent SDK for C/C++ version separated by a '/'.
         print('Agent version:', sdk.agent_version_string)
 
         mock_incoming_web_request()
 
+        mock_outgoing_web_request()
+
         # We use trace_incoming_remote_call here, because it is one of the few
         # calls that create a new path if none is running yet.
         with sdk.trace_incoming_remote_call('main', 'main', 'main'):
+            # We want to start an asynchronous execution at this time, so we create an
+            # in-process link which we will use afterwards (or in a different thread).
+            link = sdk.create_in_process_link()
+
             # Simulate some remote calls
             outgoing_remote_call(success=True)
             outgoing_remote_call(success=True)
             outgoing_remote_call(success=False)
+
+        # Now the asynchronous execution starts. So we create an in-process tracer. We're using
+        # the in-process link which we've created above. This link specifies where the traced
+        # actions below will show up in the path.
+        with sdk.trace_in_process_link(link):
+            outgoing_remote_call(success=True)
+
         print('-main')
         input('Now wait until the path appears in the UI...')
     finally:

@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''ctypes SDK wrapper for use as oneagent.nativeagent backend.
 
 Allows accessing (most) functions of the onesdk_shared DLL in a type-safe but
@@ -13,8 +28,9 @@ from functools import wraps
 
 from oneagent import logger
 from oneagent._impl import six
-from oneagent.common import SDKError, ErrorCode
+from oneagent.common import SDKError, SDKInitializationError, ErrorCode
 
+from .sdkversion import OnesdkStubVersion
 from .sdkdllinfo import WIN32, dll_name, _dll_name_in_home
 
 CCSID_NULL = 0
@@ -24,6 +40,8 @@ CCSID_UTF8 = 1209
 CCSID_UTF16_BE = 1201
 CCSID_UTF16_LE = 1203
 
+min_stub_version = OnesdkStubVersion(1, 3, 1)
+max_stub_version = OnesdkStubVersion(2, 0, 0)
 
 bool_t = ctypes.c_int32
 result_t = ctypes.c_uint32 if WIN32 else ctypes.c_int32
@@ -31,6 +49,8 @@ xchar_p = ctypes.c_wchar_p if WIN32 else ctypes.c_char_p
 ccsid_t = ctypes.c_uint16
 handle_t = ctypes.c_uint64
 c_size_p = ctypes.POINTER(ctypes.c_size_t)
+c_int64_p = ctypes.POINTER(ctypes.c_int64)
+c_double_p = ctypes.POINTER(ctypes.c_double)
 log_level_t = ctypes.c_int32
 callback_base = ctypes.WINFUNCTYPE if WIN32 else ctypes.CFUNCTYPE
 stub_logging_callback_t = callback_base(None, log_level_t, xchar_p)
@@ -57,10 +77,15 @@ class CCString(ctypes.Structure):
             return cls.from_u8_bytes(pystr)
         if pystr is None:
             return NULL_STR
-        assert isinstance(pystr, six.text_type), \
-            'Attempt to pass non-string type to SDK function expecting a' \
-            ' string. Actual type: ' + str(type(pystr))
-        return cls.from_unicode(pystr)
+        if isinstance(pystr, six.text_type):
+            return cls.from_unicode(pystr)
+        # PyPy sometimes auto-converts, e.g. when assigning to an array
+        # For these cases, it is nice when from_param is idempotent.
+        if isinstance(pystr, cls):
+            return pystr
+        raise ValueError(
+            'Attempt to pass non-string type to SDK function expecting a'
+            ' string. Actual type: ' + str(type(pystr)))
 
     @classmethod
     def from_u8_bytes(cls, pybstr):
@@ -106,7 +131,7 @@ else:
     def ufromxstr(xstr):
         return u8_to_str(xstr)
 
-
+#pylint:disable=too-many-instance-attributes
 class SDKDllInterface(object):
 
     _ONESDK_PREFIX = 'onesdk_'
@@ -120,8 +145,13 @@ class SDKDllInterface(object):
             name = name[:-2]
         return name
 
-    def _initfn(self, name, args, ret, public=True):
+    def _initfn(self, name, args, ret, public=True, check=False): #pylint:disable=too-many-arguments
         fullname = self._ONESDK_PREFIX + name
+
+        if check and not hasattr(self._dll, fullname):
+            msg = 'Unable to find function '+ fullname + ' in the OneAgent SDK for C/C++'
+            raise SDKInitializationError(ErrorCode.INVALID_AGENT_BINARY, msg)
+
         func = getattr(self._dll, fullname)
         func.argtypes = args
         func.restype = ret
@@ -131,14 +161,68 @@ class SDKDllInterface(object):
         setattr(self, name, func)
         return func
 
+    #pylint:disable=too-many-statements
     def __init__(self, libname):
         self._log_cb = None
         self._diag_cb = None
         self._py_diag_cb = None
 
+        self._agent_found = False
+        self._agent_is_compatible = False
+        self._agent_sdk_version = None
+        self._agent_version = None
+
         self._dll = ctypes.WinDLL(libname) if WIN32 else ctypes.CDLL(libname)
 
         initfn = self._initfn
+
+        # Getting mandatory methods first and fail if they can't be found.
+        self._agent_sdk_version = '-'
+
+        try:
+            initfn(
+                'agent_get_current_state',
+                (),
+                ctypes.c_int32,
+                check=True) # avail since 1.0.0
+
+            initfn(
+                'agent_get_version_string',
+                (),
+                xchar_p,
+                public=False,
+                check=True) # avail since 1.0.0
+
+            initfn(
+                'stub_get_version',
+                (ctypes.POINTER(OnesdkStubVersion),),
+                None,
+                public=False,
+                check=True) # avail since 1.2.0
+
+            _stub_version = self._get_stub_version()
+            self._agent_sdk_version = str(_stub_version)
+
+            if not min_stub_version <= _stub_version < max_stub_version:
+                raise SDKInitializationError(ErrorCode.INVALID_AGENT_BINARY, \
+                               'The version of the OneAgent SDK for C/C++ does not match the ' \
+                               'prerequisites for this OneAgent SDK for Python: ' + \
+                               str(min_stub_version) + ' <= ' + self._agent_sdk_version + ' < ' + \
+                               str(max_stub_version))
+
+            initfn(
+                'stub_get_agent_load_info',
+                (ctypes.POINTER(bool_t), ctypes.POINTER(bool_t)),
+                None,
+                public=False,
+                check=True) # avail since 1.3.0
+
+            logger.info('Native SDK library "%s" version %s loaded.', \
+                        libname, self._agent_sdk_version)
+        except SDKInitializationError as e:
+            if e.code == ErrorCode.INVALID_AGENT_BINARY:
+                e.agent_version = '-/' + self._agent_sdk_version
+            raise
 
         # Args
         initfn(
@@ -184,14 +268,10 @@ class SDKDllInterface(object):
 
         # Init/Shutdown
         initfn(
-            'agent_get_version_string',
-            (),
-            xchar_p,
-            public=False)
-        initfn(
             'initialize',
             (),
-            result_t)
+            result_t,
+            public=False)
         initfn(
             'shutdown',
             (),
@@ -199,10 +279,6 @@ class SDKDllInterface(object):
 
         # Missing: agent_internl_dispatch(int32, void*); probably useless
 
-        initfn(
-            'agent_get_current_state',
-            (),
-            ctypes.c_int32)
         initfn(
             'agent_set_logging_callback',
             (agent_logging_callback_t,),
@@ -305,6 +381,44 @@ class SDKDllInterface(object):
             (handle_t, ctypes.c_int32),
             None)
 
+        # inprocess linking
+        initfn(
+            'inprocesslink_create',
+            (ctypes.c_char_p, ctypes.c_size_t, c_size_p),
+            ctypes.c_size_t,
+            public=False).__doc__ = \
+                '(buffer, buffer_size, required_buffer_size) -> required_buffer_size'
+
+        initfn(
+            'inprocesslinktracer_create',
+            (ctypes.c_char_p, ctypes.c_size_t),
+            handle_t,
+            public=False).__doc__ = \
+                '(in_process_link_bytes, in_process_link_size) -> tracer'
+
+        # outgoing web request
+        initfn(
+            'outgoingwebrequesttracer_create_p',
+            (CCStringPInArg, CCStringPInArg),
+            handle_t).__doc__ = \
+                '(url, method) -> tracer'
+
+        self._wrap_headerlist_fn(initfn(
+            'outgoingwebrequesttracer_add_request_headers_p',
+            headerlist_arg_ts,
+            None,
+            public=False))
+
+        self._wrap_headerlist_fn(initfn(
+            'outgoingwebrequesttracer_add_response_headers_p',
+            headerlist_arg_ts,
+            None,
+            public=False))
+
+        initfn(
+            'outgoingwebrequesttracer_set_status_code',
+            (handle_t, ctypes.c_int32),
+            None)
 
         # Generic nodes
         initfn(
@@ -348,6 +462,92 @@ class SDKDllInterface(object):
             None,
             public=False)
 
+        # SCAV - custom request attributes
+        self._wrap_typed_headerlist_fn(initfn(
+            'customrequestattribute_add_integers_p',
+            (ctypes.POINTER(CCString), c_int64_p, ctypes.c_size_t),
+            None,
+            public=False), ctypes.c_int64)
+
+        self._wrap_typed_headerlist_fn(initfn(
+            'customrequestattribute_add_floats_p',
+            (ctypes.POINTER(CCString), c_double_p, ctypes.c_size_t),
+            None,
+            public=False), ctypes.c_double)
+
+        self._wrap_typed_headerlist_fn(initfn(
+            'customrequestattribute_add_strings_p',
+            (ctypes.POINTER(CCString), ctypes.POINTER(CCString), ctypes.c_size_t),
+            None,
+            public=False), CCString)
+
+    def initialize(self):
+        result = self._initialize()
+
+        self._agent_version = ufromxstr(self._agent_get_version_string()) \
+                                        + '/' + self._agent_sdk_version
+
+        found = bool_t()
+        compatible = bool_t()
+        self._stub_get_agent_load_info(ctypes.byref(found), ctypes.byref(compatible))
+        self._agent_found = found.value != 0
+        self._agent_is_compatible = compatible.value != 0
+
+        return result
+
+    def agent_found(self):
+        return self._agent_found
+
+    def agent_is_compatible(self):
+        return self._agent_is_compatible
+
+    def _get_stub_version(self):
+        version = OnesdkStubVersion(0, 0, 0)
+        self._stub_get_version(version)
+        return version
+
+    #pylint:enable=too-many-statements
+    def _wrap_typed_headerlist_fn(self, func, value_type):
+        fn_name = self._fn_basename(func.__name__)
+        assert fn_name.endswith('s')
+        fn_singular_name = fn_name[:-1]
+
+        c_type_is_string = value_type == CCString
+
+        @wraps(func)
+        def headerlist_fn(keys, values, count):
+            if count is None:
+                count = len(keys)
+
+            arr_t = CCString * count
+            key_arr = arr_t()
+            for i, key in enumerate(keys):
+                key_arr[i] = CCString.from_param(key)
+
+            arr_t = value_type * count
+            val_arr = arr_t()
+
+            if c_type_is_string:
+                for i, value in enumerate(values):
+                    val_arr[i] = CCString.from_param(value)
+            else:
+                for i, value in enumerate(values):
+                    val_arr[i] = value_type(value)
+
+            return func(key_arr, val_arr, count)
+        headerlist_fn.__doc__ = "(keys, values, count)"
+
+        def single_header_fn(key, value):
+            if c_type_is_string:
+                return func(CCStringPInArg.from_param(key), CCStringPInArg.from_param(value), 1)
+            return func(CCStringPInArg.from_param(key), value_type(value), 1)
+        single_header_fn.__doc__ = "(key, value)"
+        single_header_fn.__name__ = fn_singular_name
+
+        setattr(self, fn_name, headerlist_fn)
+        setattr(self, fn_singular_name, single_header_fn)
+        return headerlist_fn, single_header_fn
+
     def _wrap_headerlist_fn(self, func):
         fn_name = self._fn_basename(func.__name__)
         assert fn_name.endswith('s')
@@ -380,6 +580,19 @@ class SDKDllInterface(object):
         setattr(self, fn_singular_name, single_header_fn)
         return headerlist_fn, single_header_fn
 
+    def trace_in_process_link(self, link_bytes):
+        return self._inprocesslinktracer_create(ctypes.c_char_p(link_bytes), len(link_bytes))
+
+    def create_in_process_link(self):
+        bufsz = ctypes.c_size_t()
+        self._inprocesslink_create(None, 0, bufsz)
+
+        buf = ctypes.create_string_buffer(bufsz.value)
+        cnt = self._inprocesslink_create(buf, bufsz, None)
+        assert cnt == bufsz.value
+
+        return buf.raw
+
     def strerror(self, error_code):
         buf = mkxstrbuf(1024)
         return ufromxstr(self._stub_xstrerror(error_code, buf, 1024))
@@ -397,7 +610,7 @@ class SDKDllInterface(object):
             self._log_cb = c_cb
 
     def agent_get_version_string(self):
-        return ufromxstr(self._agent_get_version_string())
+        return self._agent_version
 
     def agent_set_logging_callback(self, callback):
         if callback is None:
@@ -458,13 +671,13 @@ def loadsdk(libname=None):
         except ImportError:
             logger.warning(
                 'Could not import pkg_resources module:'
-                ' loading SDK native library might fail',
+                ' loading native SDK library might fail',
                 exc_info=sys.exc_info())
             thisdir = path.dirname(path.abspath(__file__))
             libname = path.join(thisdir, dll_name())
 
     try:
-        logger.info('Loading native sdk "%s".', libname)
+        logger.info('Loading native SDK library "%s".', libname)
         return SDKDllInterface(libname)
     except OSError as e:
         msg = 'Failed loading SDK stub from ' + libname + ': ' + str(e)
