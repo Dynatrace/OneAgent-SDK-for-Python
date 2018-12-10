@@ -377,9 +377,8 @@ class SDK(object):
         - Other unexpected events (like out of memory situations) that prevented
           an operation from completing successfully.
 
-        Use this as a development and debugging aid only. The exact situations
-        and arguments in/with which the callback is invoked are undocumented and
-        may change any time.
+        .. warning:: Use this as a development and debugging aid only. Your application should not
+            rely on a calling sequence or any arguments being set or passed to the callback.
 
         :param callable callback: The callback function. Receives the (unicode)
             error message as its only argument.

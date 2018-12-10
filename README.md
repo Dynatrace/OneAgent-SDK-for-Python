@@ -21,7 +21,7 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
   * [Incoming web requests](#incoming-web-requests)
   * [Outgoing web requests](#outgoing-web-requests)
   * [Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution)
-  * [Custom Request Attributes](#custom-request-attributes)
+  * [Custom request attributes](#custom-request-attributes)
 - [Troubleshooting](#troubleshooting)
   * [Installation issues](#installation-issues)
   * [Post-installation issues](#post-installation-issues)
@@ -148,7 +148,9 @@ Unusual events that prevent an operation from completing successfully include:
 * API usage errors
 * other unexpected events (like out of memory situations)
 
-The exact situations and arguments in/with which the callback is invoked are undocumented and may change at any time.
+> *NOTE*: Use this as a development and debugging aid only. Your application should not rely on a calling sequence or any arguments in addition to the
+unicode message being set or passed to the callback.
+
 ```python
 def _diag_callback(unicode_message):
 	print(unicode_message)
@@ -281,7 +283,7 @@ See the documentation for more information:
 <a name="incoming-web-requests"></a>
 ### Incoming web requests
 
-[Like for database infos](#sql-database-requests), to trace incoming web requests you need a web application info object which stores the
+[Same as with database infos](#sql-database-requests), to trace incoming web requests you need a web application info object which stores the
 information about your web application which does not change:
 
 ```python
@@ -512,7 +514,7 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 <a name="let-us-help-you"></a>
 ### Let us help you
 
-Make sure your issue is not already solved in the [available documentation](#documenation) before you ask for help. Especially the
+Make sure your issue is not already solved in the [available documentation](#documentation) before you ask for help. Especially the
 [troubleshooting section in this README](#troubleshooting) may prove helpful.
 
 
@@ -529,21 +531,6 @@ Make sure your issue is not already solved in the [available documentation](#doc
 
 Please see the [GitHub releases page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases),
 and the [PyPI release history](https://pypi.org/project/oneagent-sdk/#history).
-
-### Breaking Changes in 1.1.0
-The SDK initialization has changed. Until now you had the possibility to initialize the SDK using
-two methods:
-- `oneagent.try_init()`
-- `oneagent.sdk.SDK.get()`
-
-The latter method implicitly initialized the SDK. This was changed in 1.1.0. Both methods were removed.
-Now it's mandatory to call [`oneagent.initialize()`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.initialize)
-to initialize the SDK and [`oneagent.shutdown()`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.shutdown)
-to shut the SDK down. For each initialize call there must be a corresponding shutdown call. The
-`oneagent.sdk.SDK.get()` method was replaced by a new [`oneagent.get_sdk()`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.get_sdk)
-method which does not implicitly initialize the SDK anymore. If this new method is called without
-previously initializing the SDK then a dummy (non-functional) SDK instance will be returned. This
-instance won't do anything if it is used later.
 
 
 <a name="license"></a>
