@@ -378,7 +378,7 @@ class SDK(object):
           an operation from completing successfully.
 
         .. warning:: Use this as a development and debugging aid only. Your application should not
-            rely on a calling sequence or any arguments being set or passed to the callback.
+            rely on a calling sequence or any message content being set or passed to the callback.
 
         :param callable callback: The callback function. Receives the (unicode)
             error message as its only argument.

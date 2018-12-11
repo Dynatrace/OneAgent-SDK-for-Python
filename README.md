@@ -148,8 +148,8 @@ Unusual events that prevent an operation from completing successfully include:
 * API usage errors
 * other unexpected events (like out of memory situations)
 
-> *NOTE*: Use this as a development and debugging aid only. Your application should not rely on a calling sequence or any arguments in addition to the
-unicode message being set or passed to the callback.
+> **NOTE**: Use this as a development and debugging aid only. Your application should not rely on a calling sequence or any message content being set
+or passed to the callback.
 
 ```python
 def _diag_callback(unicode_message):
