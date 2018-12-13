@@ -1,11 +1,27 @@
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import print_function
 
 import pytest
 
 from oneagent import sdk as onesdk
 from oneagent._impl import six
-from oneagent._impl.native import sdkmockiface
 from oneagent._impl.native import nativeagent
+
+import sdkmockiface
 
 from testhelpers import (
     get_nsdk,
@@ -206,7 +222,17 @@ def test_public_sdk_sample(native_sdk):
         def check_remote_child_err(child):
             check_remote_child(child)
             node = child[1]
-            assert node.err_info == (RTERR_QNAME, 'remote error message')
+            assert node.err_info == (
+                RTERR_QNAME, 'Remote call failed on the server side.')
+
+            def check_linked_remote_thread_err(rmchild):
+                rmlink, rmnode = rmchild
+                assert rmlink == sdkmockiface.TracerHandle.LINK_TAG
+                assert type(rmnode) is sdkmockiface.InRemoteCallHandle
+                check_remote_node(rmnode)
+                assert not rmnode.children
+
+            chk_seq(node.children, [check_linked_remote_thread_err])
 
         def check_remote_child_ok(child):
             check_remote_child(child)
@@ -236,12 +262,38 @@ def test_public_sdk_sample(native_sdk):
     def check_is_linked(root):
         assert root.linked_parent
 
-    def check_web_request(root):
+    def check_is_inprocess_link(root):
+        assert type(root) is sdkmockiface.InProcessLinkTracerHandle
+
+    def check_incoming_web_request(root):
         assert type(root) is sdkmockiface.InWebReqHandle
+        assert len(root.custom_attribs) == 3
+        key, value = root.custom_attribs[0]
+        assert key == 'custom int attribute'
+        assert value == 42
+        key, value = root.custom_attribs[1]
+        assert key == 'custom float attribute'
+        assert value == 1.778
+        key, value = root.custom_attribs[2]
+        assert key == 'custom string attribute'
+        assert value == 'snow is falling'
+
+    def check_outgoing_weg_request(root):
+        assert type(root) is sdkmockiface.OutWebReqHandle
+        assert root.resp_code == 200
+        assert len(root.req_hdrs) == 1
+        header, value = root.req_hdrs[0]
+        assert header == 'X-not-a-useful-header'
+        assert value == 'python-was-here'
+        assert len(root.resp_hdrs) == 1
+        header, value = root.resp_hdrs[0]
+        assert header == 'Content-Length'
+        assert value == '1234'
 
     chk_seq(
         native_sdk.finished_paths,
-        [check_web_request] + [check_is_linked] * 2 + [check_root])
+        ([check_incoming_web_request] + [check_outgoing_weg_request] + [check_is_linked] * 3
+         + [check_root] + [check_is_linked] + [check_is_inprocess_link]))
 
 @pytest.mark.dependsnative
 def test_sdk_callback_smoke():

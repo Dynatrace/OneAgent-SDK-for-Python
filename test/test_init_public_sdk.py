@@ -1,3 +1,18 @@
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import print_function
 
 import sys
@@ -40,11 +55,6 @@ def test_run_public_sdk_noc():
     assert '-main' in out
     assert 'DONE.' in out
 
-def test_run_public_sdk_fail():
-    '''Test that using the native SDK without the stub and NULL-SDK crashes.'''
-    out = run_in_new_interpreter(__name__, ['noc nonull tryinit'])
-    assert 'ABORTED.' in out
-
 def test_mk_sdkopts_alldefaults():
     oldargs = sys.argv
     newargs = ['--dt_foo=bar', 'qu', '--dt_bla=off', 'dt_quak=on']
@@ -83,17 +93,8 @@ def main():
     if 'noc' in flags:
         sys.modules['oneagent._impl.native.sdkctypesiface'] = False
 
-    if 'nonull' in flags:
-        sys.modules['oneagent._impl.native.sdknulliface'] = False
-
     if 'tryinit' in flags:
-        try:
-            init_result = oneagent.try_init(['loglevelsdk=finest'])
-        except ImportError:
-            if 'nonull' in flags:
-                print('ABORTED.')
-                return
-            raise
+        init_result = oneagent.initialize(['loglevelsdk=finest'])
         if 'noc' in flags:
             assert not init_result
             assert init_result.status == init_result.STATUS_STUB_LOAD_ERROR

@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''SDK interface with null implementation, for testing etc.'''
 
 from __future__ import print_function
@@ -12,9 +27,10 @@ from oneagent.common import ErrorCode, AgentState
 NULL_HANDLE = 0
 
 class SDKNullInterface(object): #pylint:disable=too-many-public-methods
-    def __init__(self):
+    def __init__(self, version='-/-'):
         self._diag_cb = None
         self._log_cb = None
+        self._agent_version = version
 
     #pylint:disable=no-self-use,unused-argument
 
@@ -40,7 +56,13 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         pass
 
     def agent_get_version_string(self):
-        return ''
+        return self._agent_version
+
+    def agent_found(self):
+        return False
+
+    def agent_is_compatible(self):
+        return False
 
     def initialize(self):
         return ErrorCode.AGENT_NOT_ACTIVE
@@ -104,6 +126,30 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
 
     #pylint:enable=invalid-name
 
+    def outgoingwebrequesttracer_create(self, uri, http_method):
+        return NULL_HANDLE
+
+    #pylint:disable=invalid-name
+
+    def outgoingwebrequesttracer_add_request_headers(
+            self, tracer_h, keys, vals, count):
+        pass
+
+    def outgoingwebrequesttracer_add_request_header(self, tracer_h, key, val):
+        pass
+
+    def outgoingwebrequesttracer_add_response_headers(
+            self, tracer_h, keys, vals, count):
+        pass
+
+    def outgoingwebrequesttracer_add_response_header(self, tracer_h, key, val):
+        pass
+
+    def outgoingwebrequesttracer_set_status_code(self, tracer_h, code):
+        pass
+
+    #pylint:enable=invalid-name
+
     def databaseinfo_create(self, dbname, dbvendor, chan_ty, chan_ep):
         return NULL_HANDLE
 
@@ -160,4 +206,32 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         pass
 
     def tracer_set_incoming_byte_tag(self, tracer_h, tag):
+        pass
+
+    #pylint:disable=invalid-name
+
+    def customrequestattribute_add_integers(self, keys, values, count):
+        pass
+
+    def customrequestattribute_add_integer(self, key, value):
+        pass
+
+    def customrequestattribute_add_floats(self, keys, values, count):
+        pass
+
+    def customrequestattribute_add_float(self, key, value):
+        pass
+
+    def customrequestattribute_add_strings(self, keys, values, count):
+        pass
+
+    def customrequestattribute_add_string(self, key, value):
+        pass
+
+    #pylint:enable=invalid-name
+
+    def trace_in_process_link(self, link_bytes):
+        pass
+
+    def create_in_process_link(self):
         pass

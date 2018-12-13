@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''SDK tracer factory functions and misc functions.
 
 .. class:: Channel
@@ -19,12 +34,11 @@
        each channel type.
 '''
 
-import threading
 from collections import namedtuple, Mapping
 
 from oneagent._impl import six
 from oneagent._impl.native.nativeagent import try_get_sdk as _try_get_nsdk
-from oneagent import try_init as _init_nsdk, logger
+from oneagent import initialize as _init_nsdk, logger
 
 from oneagent.common import * #pylint:disable=wildcard-import
 
@@ -55,9 +69,6 @@ def _get_kvc(kv_arg):
 class SDK(object):
     '''The main entry point to the Dynatrace SDK.'''
 
-    _instance = None
-    _init_lock = threading.Lock()
-
     def _applytag(self, tracer, str_tag, byte_tag):
         if str_tag is None and byte_tag is None:
             return
@@ -85,8 +96,8 @@ class SDK(object):
         '''Creates a database info with the given information for use with
         :meth:`trace_sql_database_request`.
 
-        :param str name: The name (e.g. connection string) of the database.
-        :param str vendor: The type of the database (e.g. sqlite, PostgreSQL,
+        :param str name: The name (e.g., connection string) of the database.
+        :param str vendor: The type of the database (e.g., sqlite, PostgreSQL,
             MySQL).
         :param Channel channel: The channel used to communicate with the
             database.
@@ -150,7 +161,7 @@ class SDK(object):
             information (see :meth:`create_web_application_info`).
         :param str url: The requested URL (including scheme, hostname/port,
             path and query).
-        :param str method: The HTTP method of the request (e.g. GET or
+        :param str method: The HTTP method of the request (e.g., GET or
             POST).
         :param headers: The HTTP headers of the request. Can be either a
             dictionary mapping header name to value (:class:`str` to
@@ -158,7 +169,7 @@ class SDK(object):
             names as first element, an equally long sequence of
             corresponding values as second element and optionally a count as
             third element (this will default to the :func:`len` of the
-            header names.
+            header names).
 
             Some headers can appear multiple times in an HTTP request. To
             capture all the values, either use the tuple-form and provide
@@ -205,6 +216,53 @@ class SDK(object):
             raise
         return result
 
+    def trace_outgoing_web_request(self, url, method, headers=None):
+        '''Create a tracer for an outgoing webrequest.
+
+        :param str url: The request URL (including scheme, hostname/port, path and query).
+        :param str method: The HTTP method of the request (e.g., GET or POST).
+        :param headers: The HTTP headers of the request. Can be either a
+            dictionary mapping header name to value (:class:`str` to
+            :class:`str`) or a tuple containing a sequence of string header
+            names as first element, an equally long sequence of
+            corresponding values as second element and optionally a count as
+            third element (this will default to the :func:`len` of the
+            header names).
+
+            Some headers can appear multiple times in an HTTP request. To
+            capture all the values, either use the tuple-form and provide
+            the name and corresponding values for each, or if possible for
+            that particular header, set the value to an appropriately
+            concatenated string.
+
+            .. warning:: If you use Python 2, be sure to use the UTF-8 encoding
+                or the :class:`unicode` type! See :ref:`here
+                <http-encoding-warning>` for more information.
+        :type headers: \
+            dict[str, str] or \
+            tuple[~typing.Collection[str], ~typing.Collection[str]] or \
+            tuple[~typing.Iterable[str], ~typing.Iterable[str], int]]
+
+        :rtype: tracers.OutgoingWebRequestTracer
+
+        .. versionadded:: 1.1.0
+        '''
+        result = tracers.OutgoingWebRequestTracer(
+            self._nsdk, self._nsdk.outgoingwebrequesttracer_create(url, method))
+
+        if not result:
+            return result
+
+        try:
+            if headers:
+                self._nsdk.outgoingwebrequesttracer_add_request_headers(result.handle,
+                                                                        *_get_kvc(headers))
+        except:
+            result.end()
+            raise
+
+        return result
+
     def trace_outgoing_remote_call(
             self,
             method,
@@ -223,7 +281,7 @@ class SDK(object):
             service.
         :param str protocol_name: The name of the remoting protocol (on top of
             the communication protocol specified in :code:`channel.type_`.) that
-            is used to to communicate with the service (e.g. RMI, Protobuf,
+            is used to to communicate with the service (e.g., RMI, Protobuf,
             ...).
 
             __ \
@@ -268,6 +326,48 @@ class SDK(object):
         self._applytag(result, str_tag, byte_tag)
         return result
 
+    def create_in_process_link(self):
+        '''Creates an in-process link.
+
+        An application can call this function to retrieve an in-process link, which can then be
+        used to trace related processing at a later time and/or in a different thread.
+
+        In-process links allow an application to associate (link) tasks, that will be executed
+        asynchronously in the same process, with the currently running task/operation. The linked
+        tasks may be started and completed at arbitrary times - it's not necessary for them to
+        complete (or even start) before the "parent" operation to which they are linked completes.
+
+        For further information, see the high level SDK documentation at
+        <https://github.com/Dynatrace/OneAgent-SDK/#in-process-linking>.
+
+        .. note::
+            * If no tracer is active on the current thread, the retrieved link will be empty
+              (have zero length).
+            * Links returned by this function are not compatible with dynatrace string or byte tags,
+              they can only be used with :meth:`trace_in_process_link`.
+            * Links returned by this function can only be used in the process in which they were
+              created.
+
+        :rtype: bytes
+
+        .. versionadded:: 1.1.0
+        '''
+        return self._nsdk.create_in_process_link()
+
+    def trace_in_process_link(self, link_bytes):
+        '''Creates a tracer for tracing asynchronous related processing in the same process.
+
+        For more information see :meth:`create_in_process_link`.
+
+        :param bytes link_bytes: An in-process link created using :meth:`create_in_process_link`.
+
+        :rtype: tracers.InProcessLinkTracer
+
+        .. versionadded:: 1.1.0
+        '''
+        return tracers.InProcessLinkTracer(self._nsdk,
+                                           self._nsdk.trace_in_process_link(link_bytes))
+
     def set_diagnostic_callback(self, callback):
         '''Sets a callback to be informed of unusual events.
 
@@ -277,9 +377,8 @@ class SDK(object):
         - Other unexpected events (like out of memory situations) that prevented
           an operation from completing successfully.
 
-        Use this as a development and debugging aid only. The exact situations
-        and arguments in/with which the callback is invoked are undocumented and
-        may change any time.
+        .. warning:: Use this as a development and debugging aid only. Your application should not
+            rely on a calling sequence or any message content being set or passed to the callback.
 
         :param callable callback: The callback function. Receives the (unicode)
             error message as its only argument.
@@ -307,32 +406,48 @@ class SDK(object):
         :rtype: str'''
         return self._nsdk.agent_get_version_string()
 
-    @classmethod
-    def get(cls):
-        '''Returns a shared :class:`SDK` instance.
+    @property
+    def agent_found(self):
+        '''Returns whether an OneAgent could be found or not.
 
-        Repeated calls to this function are supported and will always return the
-        same object.
+        :rtype: bool
 
-        .. note:: If the SDK has not been initialized prior to the first call
-            to this function, an attempt is made to initialize it with the
-            default settings. If these don't work for you, you should manually
-            call :func:`oneagent.try_init` or a similar function.
+        .. versionadded:: 1.1.0
+        '''
+        return self._nsdk.agent_found()
+
+    @property
+    def agent_is_compatible(self):
+        '''Returns whether the found OneAgent is compatible with this version of the OneAgent
+        SDK for Python.
+
+        :rtype: bool
+
+        .. versionadded:: 1.1.0
+        '''
+        return self._nsdk.agent_is_compatible()
+
+    def add_custom_request_attribute(self, key, value):
+        '''Adds a custom request attribute to the current active tracer.
+
+            :param str key: The name of the custom request attribute, the name is mandatory and
+                may not be None.
+            :param value: The value of the custom request attribute. Currently supported types
+                are integer, float and string values. The value is mandatory and may
+                not be None.
+            :type value: str or int or float
+
+            .. versionadded:: 1.1.0
         '''
 
-        # Double-checked locking.
-        if cls._instance is not None:
-            return cls._instance
-
-        with cls._init_lock:
-            if cls._instance is None:
-                nsdk = _try_get_nsdk()
-                if nsdk is None:
-                    logger.info(
-                        'Implicitly creating native SDK with default settings,'
-                        ' because it was not explicitly initialized before.')
-                    init_result = _init_nsdk()
-                    nsdk = _try_get_nsdk()
-                    assert nsdk, 'unexpected init failure: ' + str(init_result)
-                cls._instance = cls(nsdk)
-        return cls._instance
+        if isinstance(value, int):
+            self._nsdk.customrequestattribute_add_integer(key, value)
+        elif isinstance(value, float):
+            self._nsdk.customrequestattribute_add_float(key, value)
+        elif isinstance(value, six.string_types):
+            self._nsdk.customrequestattribute_add_string(key, value)
+        else:
+            warn = self._nsdk.agent_get_logging_callback()
+            if warn:
+                warn('Can\'t add custom request attribute \'{0}\' '
+                     'because the value type \'{1}\' is not supported!'.format(key, type(value)))

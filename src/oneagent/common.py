@@ -1,3 +1,18 @@
+#
+# Copyright 2018 Dynatrace LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 '''Defines basic SDK constants and classes.
 
 All public names here are also re-exported from :mod:`oneagent.sdk` and should
@@ -10,6 +25,9 @@ _DEBUG_LEAKS = False
 
 if _DEBUG_LEAKS:
     import traceback
+
+#: The Dynatrace Tag request header name which is used to transport the tag between agents.
+DYNATRACE_HTTP_HEADER_NAME = 'X-dynaTrace'
 
 class _Uninstantiable(object):
     '''Classes deriving from this class cannot be instantiated.'''
@@ -65,11 +83,11 @@ class ErrorCode(_Uninstantiable):
     #: module.
     AGENT_NOT_ACTIVE = _ERROR_BASE + 6
 
-    #: The loader module was unable to load the actual native SDK agent module.
+    #: Either the OneAgent SDK for C/C++ or the OneAgent binary could not be loaded.
     LOAD_AGENT = _ERROR_BASE + 7
 
-    #: The loader module found an SDK agent binary, but it didn't have the
-    #: expected exports.
+    #: The expected exports could not be found either in the OneAgent SDK for C/C++
+    #: or the OneAgent binary.
     INVALID_AGENT_BINARY = _ERROR_BASE + 8
 
     #: The operation failed because of an unexpected error.
@@ -204,7 +222,7 @@ class ChannelType(_Uninstantiable):
 
 class SDKError(Exception):
     '''Exception for SDK errors (mostly during initialization, see
-    :func:`oneagent.try_init`).'''
+    :func:`oneagent.initialize`).'''
     def __init__(self, code, msg):
         super(SDKError, self).__init__(code, msg)
 
@@ -217,6 +235,14 @@ class SDKError(Exception):
         #: (potentially contains more information than could be deduced from
         #: :attr:`code` alone).
         self.message = msg
+
+class SDKInitializationError(SDKError):
+    '''Exception for initialization errors.'''
+    def __init__(self, code, msg, agent_version='-/-'):
+        super(SDKInitializationError, self).__init__(code, msg)
+
+        #: The :class:`str` agent version associated with this error.
+        self.agent_version = agent_version
 
 class SDKHandleBase(object):
     '''Base class for SDK handles that must be closed explicitly.

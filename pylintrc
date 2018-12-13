@@ -9,9 +9,9 @@ include-naming-hint=y
 good-names=i,j,e,_
 
 [FORMAT]
-max-line-length=80
+max-line-length=100
 
 [TYPECHECK]
 ignored-classes=oneagent._impl.native.sdkctypesiface.SDKDllInterface
 redefining-builtins-modules=oneagent._impl.six.moves
-disable=missing-docstring,fixme,too-few-public-methods,missing-return-doc
+disable=missing-docstring,fixme,too-few-public-methods,missing-return-doc,useless-object-inheritance
