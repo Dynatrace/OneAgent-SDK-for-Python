@@ -499,6 +499,8 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 <a name="help--support"></a>
 ## Help & Support
 
+The Dynatrace OneAgent SDK for Python is currently in beta status. The features are fully supported by Dynatrace.
+
 <a name="documentation"></a>
 <a name="read-the-manual"></a>
 ### Read the manual
@@ -515,14 +517,23 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 Make sure your issue is not already solved in the [available documentation](#documentation) before you ask for help. Especially the
 [troubleshooting section in this README](#troubleshooting) may prove helpful.
 
-
+**Get Help**
 * Ask a question in the [product forums](https://answers.dynatrace.com/spaces/482/view.html).
-* Open a [GitHub issue](https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues) to:
+* Read the <a href="https://www.dynatrace.com/support/help/" target="_blank">product documentation</a>
+
+**Open a [GitHub issue](https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues) to:**
   * Report minor defects or typos.
   * Ask for improvements or changes in the SDK API.
   * Ask any questions related to the community effort.
 
-  SLAs don't apply for GitHub tickets.
+SLAs don't apply for GitHub tickets.
+
+**Customers can open a ticket on the <a href="https://support.dynatrace.com/supportportal/" target="_blank">Dynatrace support portal</a> to:**
+* Get support from the Dynatrace technical support engineering team
+* Manage and resolve product related technical issues
+
+SLAs apply according to the customer's support level.
+
 
 <a name="release-notes"></a>
 ## Release notes
