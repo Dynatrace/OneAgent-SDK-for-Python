@@ -1,3 +1,5 @@
+> Read the latest version of this README, with working internal links, at [GitHub](https://github.com/Dynatrace/OneAgent-SDK-for-Python#readme).
+
 # Dynatrace OneAgent SDK for Python
 
 This SDK enables Dynatrace customers to extend request level visibility into Python applications. It provides the Python implementation of the [Dynatrace OneAgent SDK](https://github.com/Dynatrace/OneAgent-SDK).
