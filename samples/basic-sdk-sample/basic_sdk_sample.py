@@ -24,6 +24,9 @@ import threading
 import oneagent # SDK initialization functions
 import oneagent.sdk as onesdk # All other SDK functions.
 
+from oneagent.common import MessagingDestinationType
+
+
 try: # Python 2 compatibility.
     input = raw_input #pylint:disable=redefined-builtin
 except NameError:
@@ -166,6 +169,9 @@ def mock_incoming_web_request():
             # This call will trigger the diagnostic callback.
             sdk.add_custom_request_attribute('another key', None)
 
+            # This call simulates incoming messages.
+            mock_process_incoming_message()
+
 def _process_my_outgoing_request(_tag):
     pass
 
@@ -189,6 +195,53 @@ def mock_outgoing_web_request():
         # tracer and you shouldn't forget to set the status code, too.
         tracer.add_response_headers({'Content-Length': '1234'})
         tracer.set_status_code(200) # OK
+
+def mock_process_incoming_message():
+    sdk = getsdk()
+
+    # Create the messaging system info object.
+    msi_handle = sdk.create_messaging_system_info(
+        'MyPythonSenderVendor', 'MyPythonDestination', MessagingDestinationType.QUEUE,
+        onesdk.Channel(onesdk.ChannelType.UNIX_DOMAIN_SOCKET, 'MyPythonChannelEndpoint'))
+
+    with msi_handle:
+        # Create the receive tracer for incoming messages.
+        with sdk.trace_incoming_message_receive(msi_handle):
+            print('here we wait for incoming messages ...')
+
+            # Create the tracer for processing incoming messages.
+            tracer = sdk.trace_incoming_message_process(msi_handle)
+
+            # Now we can set the vendor message and correlation IDs. It's possible to set them
+            # either before the tracer is started or afterwards. But they have to be set before
+            # the tracer ends.
+            tracer.set_vendor_message_id('message_id')
+            with tracer:
+                print('handle incoming message')
+                tracer.set_correlation_id('correlation_id')
+
+def mock_outgoing_message():
+    sdk = getsdk()
+
+    # Create the messaging system info object.
+    msi_handle = sdk.create_messaging_system_info(
+        'MyPythonReceiverVendor', 'MyPythonDestination', MessagingDestinationType.TOPIC,
+        onesdk.Channel(onesdk.ChannelType.TCP_IP, '10.11.12.13:1415'))
+
+    with msi_handle:
+        # Create the outgoing message tracer;
+        with sdk.trace_outgoing_message(msi_handle) as tracer:
+            # Set the message and correlation IDs.
+            tracer.set_vendor_message_id('msgId')
+            tracer.set_correlation_id('corrId')
+
+            print('handle outgoing message')
+
+def mock_custom_service():
+    sdk = getsdk()
+
+    with sdk.trace_custom_service('my_fancy_transaction', 'MyFancyService'):
+        print('do some fancy stuff')
 
 def _diag_callback(text):
     print(text)
@@ -236,6 +289,10 @@ def main():
         mock_incoming_web_request()
 
         mock_outgoing_web_request()
+
+        mock_outgoing_message()
+
+        mock_custom_service()
 
         # We use trace_incoming_remote_call here, because it is one of the few
         # calls that create a new path if none is running yet.

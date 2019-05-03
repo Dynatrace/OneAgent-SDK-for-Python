@@ -20,6 +20,10 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
   * [Outgoing web requests](#outgoing-web-requests)
   * [Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution)
   * [Custom request attributes](#custom-request-attributes)
+  * [Custom services](#custom-services)
+  * [Messaging](#messaging)
+    * [Outgoing Messages](#outgoing-messaging)
+    * [Incoming Messages](#incoming-messaging)
 - [Troubleshooting](#troubleshooting)
   * [Installation issues](#installation-issues)
   * [Post-installation issues](#post-installation-issues)
@@ -54,6 +58,7 @@ Dynatrace OneAgent version (it is the same as
 |:----------------------|:---------------------|:-----------------|
 |1.0                    |1.1.0                 |≥1.141            |
 |1.1                    |1.3.1                 |≥1.151            |
+|1.2                    |1.4.1                 |≥1.161            |
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -207,6 +212,8 @@ A more detailed specification of the features can be found in [Dynatrace OneAgen
 |Outgoing web requests                     |≥1.1.0   |
 |Custom request attributes                 |≥1.1.0   |
 |In-process linking                        |≥1.1.0   |
+|Messaging                                 |≥1.2.0   |
+|Custom services                           |≥1.2.0   |
 
 <a name="remote-calls"></a>
 ### Remote calls
@@ -387,7 +394,7 @@ The provided in-process link must not be serialized and can only be used inside 
 tracing where the asynchronous execution takes place:
 
 ```python
- with sdk.trace_in_process_link(in_process_link):
+with sdk.trace_in_process_link(in_process_link):
  	# Do the asynchronous job
  	:
 ```
@@ -409,6 +416,121 @@ sdk.add_custom_request_attribute('famous actor', 'Benedict Cumberbatch')
 
 Check out the documentation at:
 * [`add_custom_request_attribute`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.add_custom_request_attribute)
+
+
+<a name="custom-services"></a>
+### Custom services
+You can use the SDK to trace custom service methods. A custom service method is a meaningful part
+of your code that you want to trace but that does not fit any other tracer. An example could be
+the callback of a periodic timer.
+
+```python
+with sdk.trace_custom_service('onTimer', 'CleanupTask'):
+	# Do the cleanup task
+	:
+```
+
+Check out the documentation at:
+* [`trace_custom_service`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.trace_custom_service)
+
+
+<a name="messaging"></a>
+### Messaging
+
+You can use the SDK to trace messages sent or received via a messaging system. When tracing messages,
+we distinguish between:
+
+* sending a message
+* waiting for and receiving a message
+* processing a received message
+
+<a name="outgoing-messaging"></a>
+#### Outgoing Messages
+
+All messaging related tracers need a messaging system info object which you have to create prior
+to the respective messaging tracer, which is an outgoing message tracer in the example below.
+
+```python
+msi_handle = sdk.create_messaging_system_info(
+	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
+	ChannelType.TCP_IP, '10.11.12.13')
+
+with msi_handle:
+	with sdk.trace_outgoing_message(msi_handle) as tracer:
+		# Get and set the Dynatrace tag.
+		tag = tracer.outgoing_dynatrace_string_tag
+		message_to_send.add_header_field(oneagent.sdk.DYNATRACE_MESSAGE_PROPERTY_NAME, tag)
+
+		# Send the message.
+		the_queue.send(message_to_send)
+
+		# Optionally set message and/or correlation IDs
+		tracer.set_vendor_message_id(message_to_send.get_message_id())
+		tracer.set_correlation_id(message_to_send.get_correlation_id())
+```
+
+<a name="incoming-messaging"></a>
+#### Incoming Messages
+
+On the incoming side, we need to differentiate between the blocking receiving part and processing
+the received message. Therefore two different tracers are being used:
+
+* IncomingMessageReceiveTracer
+* IncomingMessageProcessTracer
+
+```python
+msi_handle = sdk.create_messaging_system_info(
+	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
+	ChannelType.TCP_IP, '10.11.12.13')
+
+with msi_handle:
+	# Create the receive tracer for incoming messages.
+	with sdk.trace_incoming_message_receive(msi_handle):
+		# This is a blocking call, which will return as soon as a message is available.
+		Message query_message = the_queue.receive()
+
+		# Get the Dynatrace tag from the message.
+		tag = query_message.get_header_field(oneagent.sdk.DYNATRACE_MESSAGE_PROPERTY_NAME)
+
+		# Create the tracer for processing incoming messages.
+		tracer = sdk.trace_incoming_message_process(msi_handle, str_tag=tag)
+		tracer.set_vendor_message_id(query_message.get_vendor_id())
+		tracer.set_correlation_id(query_message.get_correlation_id())
+
+		with tracer:
+			# Now let's handle the message ...
+			print('handle incoming message')
+```
+
+In case of non-blocking receive (e. g. using an event handler), there is no need to use an
+IncomingMessageReceiveTracer - just trace processing of the message by using the IncomingMessageProcessTracer:
+
+```python
+msi_handle = sdk.create_messaging_system_info(
+	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
+	ChannelType.TCP_IP, '10.11.12.13')
+
+def on_message_received(message):
+	# Get the Dynatrace tag from the message.
+	tag = message.get_header_field(oneagent.sdk.DYNATRACE_MESSAGE_PROPERTY_NAME)
+
+	# Create the tracer for processing incoming messages.
+	tracer = sdk.trace_incoming_message_process(msi_handle, str_tag=tag)
+	tracer.set_vendor_message_id(message.get_vendor_id())
+	tracer.set_correlation_id(message.get_correlation_id())
+
+	with tracer:
+		# Now let's handle the message ...
+		print('handle incoming message')
+```
+
+See the documentation for more information:
+
+* [`create_messaging_system_info`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.create_messaging_system_info)
+* [`trace_outgoing_message`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.trace_outgoing_message)
+* [`trace_incoming_message_receive`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.trace_incoming_message_receive)
+* [`trace_incoming_message_process`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.trace_incoming_message_process)
+* [General information on tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
 
 
 <a name="troubleshooting"></a>

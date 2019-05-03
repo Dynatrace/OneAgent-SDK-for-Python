@@ -368,3 +368,78 @@ class InProcessLinkTracer(Tracer):
     .. versionadded:: 1.1.0
     '''
     pass
+
+class OutgoingMessageTracer(Tracer, OutgoingTaggable):
+    '''Tracer for outgoing messages.
+
+        See :meth:`oneagent.sdk.SDK.trace_outgoing_message` for more information.
+
+        .. versionadded:: 1.2.0
+    '''
+
+    def set_vendor_message_id(self, message_id):
+        '''Sets the vendor message ID of an outgoing message.
+
+        :param str message_id: The vendor message ID provided by the messaging system.
+
+        .. note:: This information is often only available after the message was sent. Thus,
+            calling this function is also supported after starting the tracer.
+
+        .. versionadded:: 1.2.0
+        '''
+        self.nsdk.outgoingmessagetracer_set_vendor_message_id(self.handle, message_id)
+
+    def set_correlation_id(self, correlation_id):
+        '''Sets the corrrelation ID of an outgoing message.
+
+        :param str correlation_id: The correlation ID for the message, usually application-defined.
+
+        .. note:: This information is often only available after the message was sent. Thus,
+            calling this function is also supported after starting the tracer.
+
+        .. versionadded:: 1.2.0
+        '''
+        self.nsdk.outgoingmessagetracer_set_correlation_id(self.handle, correlation_id)
+
+class IncomingMessageReceiveTracer(Tracer):
+    '''Tracer for receiving messages.
+
+        See :meth:`oneagent.sdk.SDK.trace_incoming_message_receive` for more information.
+
+        .. versionadded:: 1.2.0
+    '''
+    pass
+
+class IncomingMessageProcessTracer(Tracer):
+    '''Tracer for processing incoming messages.
+
+        See :meth:`oneagent.sdk.SDK.trace_incoming_message_process` for more information.
+
+        .. versionadded:: 1.2.0
+    '''
+    def set_vendor_message_id(self, message_id):
+        '''Sets the vendor message ID of an incoming message.
+
+        :param str message_id: The message ID provided by the messaging system.
+
+        .. versionadded:: 1.2.0
+        '''
+        self.nsdk.incomingmessageprocesstracer_set_vendor_message_id(self.handle, message_id)
+
+    def set_correlation_id(self, correlation_id):
+        '''Sets the corrrelation ID of an incoming message.
+
+        :param str correlation_id: The correlation ID for the message, usually application-defined.
+
+        .. versionadded:: 1.2.0
+        '''
+        self.nsdk.incomingmessageprocesstracer_set_correlation_id(self.handle, correlation_id)
+
+class CustomServiceTracer(Tracer):
+    '''Tracer for custom services.
+
+    See :meth:`oneagent.sdk.SDK.trace_custom_service` for more information.
+
+        .. versionadded:: 1.2.0
+    '''
+    pass

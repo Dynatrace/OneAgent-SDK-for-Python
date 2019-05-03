@@ -36,7 +36,7 @@ def test_load_old_agent():
         assert sdk.agent_state == AgentState.NOT_INITIALIZED
         assert sdk.agent_found
         assert not sdk.agent_is_compatible
-        assert sdk.agent_version_string == '1.141.112.20180322-095721/1.3.1'
+        assert sdk.agent_version_string == '1.141.112.20180322-095721/1.4.1'
     finally:
         oneagent.shutdown()
         os.environ['DT_AGENTLIBRARY'] = saved_path

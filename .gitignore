@@ -10,3 +10,7 @@ dist/
 /tmp/
 *.egg-info
 .pytest_cache/
+/.project
+/.pydevproject
+/.README.md.html
+/.settings
