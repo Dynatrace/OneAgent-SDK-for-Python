@@ -133,6 +133,26 @@ class MessageSeverity(_Uninstantiable): # Private
     #: messages.
     NONE = 8
 
+class MessagingDestinationType(_Uninstantiable):
+    '''Messaging Destination Type Constants
+    '''
+    QUEUE = 1   #: A message queue: a message sent to this destination will be (successfully)
+                #: received by only one consumer.
+    TOPIC = 2   #: A message topic: a message sent to this destination will be received by all
+                #: subscribed consumers.
+
+class MessagingVendor(_Uninstantiable):
+    '''Messaging System Vendor Strings
+    '''
+    HORNETQ = "HornetQ"             #: vendor string for HornetQ
+    ACTIVE_MQ = "ActiveMQ"          #: vendor string for ActiveMQ
+    RABBIT_MQ = "RabbitMQ"          #: vendor string for RabbitMQ
+    ARTEMIS = "Artemis"             #: vendor string for Artemis
+    WEBSPHERE = "WebSphere"         #: vendor string for WebSphere
+    MQSERIES_JMS = "MQSeries JMS"   #: vendor string for MQSeries JMS
+    MQSERIES = "MQSeries"           #: vendor string for MQSeries
+    TIBCO = "Tibco"                 #: vendor string for Tibco
+
 class DatabaseVendor(_Uninstantiable):
     '''String constants for well-known database vendors. Use for the
     :code:`vendor` parameter of
@@ -313,3 +333,9 @@ class WebapplicationInfoHandle(SDKHandleBase):
         :meth:`oneagent.sdk.SDK.create_web_application_info`.'''
     def close_handle(self, nsdk, handle):
         nsdk.webapplicationinfo_delete(handle)
+
+class MessagingSystemInfoHandle(SDKHandleBase):
+    '''Opaque handle for messaging system info object. See
+        :meth:`oneagent.sdk.SDK.create_messaging_system_info`.'''
+    def close_handle(self, nsdk, handle):
+        nsdk.messagingsysteminfo_delete(handle)

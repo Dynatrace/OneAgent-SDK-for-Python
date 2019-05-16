@@ -278,7 +278,7 @@ def test_public_sdk_sample(native_sdk):
         assert key == 'custom string attribute'
         assert value == 'snow is falling'
 
-    def check_outgoing_weg_request(root):
+    def check_outgoing_web_request(root):
         assert type(root) is sdkmockiface.OutWebReqHandle
         assert root.resp_code == 200
         assert len(root.req_hdrs) == 1
@@ -290,10 +290,21 @@ def test_public_sdk_sample(native_sdk):
         assert header == 'Content-Length'
         assert value == '1234'
 
+    def check_is_outgoing_messaging(root):
+        assert type(root) is sdkmockiface.OutMsgTracerHandle
+        assert root.vendor_message_id == 'msgId'
+        assert root.correlation_id == 'corrId'
+
+    def check_custom_service(root):
+        assert type(root) is sdkmockiface.CustomServiceTracerHandle
+        assert root.service_method == 'my_fancy_transaction'
+        assert root.service_name == 'MyFancyService'
+
     chk_seq(
         native_sdk.finished_paths,
-        ([check_incoming_web_request] + [check_outgoing_weg_request] + [check_is_linked] * 3
-         + [check_root] + [check_is_linked] + [check_is_inprocess_link]))
+        ([check_incoming_web_request] + [check_outgoing_web_request]
+         + [check_is_outgoing_messaging] + [check_custom_service]
+         + [check_is_linked] * 3 + [check_root] + [check_is_linked] + [check_is_inprocess_link]))
 
 @pytest.mark.dependsnative
 def test_sdk_callback_smoke():

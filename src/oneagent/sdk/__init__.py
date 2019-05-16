@@ -451,3 +451,122 @@ class SDK(object):
             if warn:
                 warn('Can\'t add custom request attribute \'{0}\' '
                      'because the value type \'{1}\' is not supported!'.format(key, type(value)))
+
+    # messaging
+
+    def create_messaging_system_info(self, vendor_name, destination_name,
+                                     destination_type, channel):
+        '''Creates a messaging system info object.
+
+            This function creates a messaging system info object which is required for tracing
+            sending, receiving and processing messages.
+
+            :param str vendor_name:
+                One of the constants from :class:`oneagent.common.MessagingVendor` for well known
+                vendors, or a custom string otherwise.
+            :param str destination_name:
+                The "destination" name, i.e. queue name or topic name.
+            :param MessagingDestinationType destination_type:
+                One of the constants from :class:`oneagent.common.MessagingDestinationType`.
+            :param Channel channel:
+                The channel used for communication.
+
+            :rtype: MessagingSystemInfoHandle
+
+            .. versionadded:: 1.2.0
+        '''
+
+        return MessagingSystemInfoHandle(
+            self._nsdk, self._nsdk.messagingsysteminfo_create(
+                vendor_name, destination_name, destination_type, channel.type_, channel.endpoint))
+
+    def trace_outgoing_message(self, messaging_system_info):
+        '''Creates a tracer for tracing an outgoing message.
+
+            :param MessagingSystemInfoHandle messaging_system_info:
+                Messaging system information (see :meth:`create_messaging_system_info`)
+
+            :rtype: tracers.OutgoingMessageTracer
+
+            .. versionadded:: 1.2.0
+        '''
+
+        return tracers.OutgoingMessageTracer(
+            self._nsdk, self._nsdk.outgoingmessagetracer_create(messaging_system_info.handle))
+
+    def trace_incoming_message_receive(self, messaging_system_info):
+        '''Creates a tracer for tracing the receipt of an incoming message.
+
+            Tracing the receipt of the message is optional but may make sense if receiving
+            may take a significant amount of time, e.g. when doing a blocking receive. It
+            might make less sense when tracing a polling receive. If you do use a receive
+            tracer, start and end the corresponding incoming message process tracer
+            (see :meth:`trace_incoming_message_process`) while the receive tracer
+            is still active.
+
+            :param MessagingSystemInfoHandle messaging_system_info:
+                Messaging system information (see :meth:`create_messaging_system_info`)
+
+            :rtype: tracers.IncomingMessageReceiveTracer
+
+            .. versionadded:: 1.2.0
+        '''
+
+        return tracers.IncomingMessageReceiveTracer(
+            self._nsdk,
+            self._nsdk.incomingmessagereceivetracer_create(messaging_system_info.handle))
+
+    def trace_incoming_message_process(self, messaging_system_info, str_tag=None, byte_tag=None):
+        '''Creates a tracer for tracing the processing of an incoming message.
+
+            Use this tracer to trace the actual, logical processing of the message as opposed
+            to the time it takes to receive it.
+            If you use an incoming message receive tracer
+            (see :meth:`trace_incoming_message_receive`) to trace the receipt of the
+            processed message, start and end the corresponding incoming message process tracer
+            while the receive tracer is still active.
+
+            :param MessagingSystemInfoHandle messaging_system_info:
+                Messaging system information (see :meth:`create_messaging_system_info`)
+            :param str str_tag:
+                The Dynatrace tag as string (see also :ref:`tagging`).
+            :param bytes byte_tag:
+                The Dynatrace tag as byte array.
+
+            :rtype: tracers.IncomingMessageProcessTracer
+
+            .. versionadded:: 1.2.0
+        '''
+
+        result = tracers.IncomingMessageProcessTracer(
+            self._nsdk, self._nsdk.incomingmessageprocesstracer_create(
+                messaging_system_info.handle))
+
+        if result is not None:
+            self._applytag(result, str_tag, byte_tag)
+
+        return result
+
+    #pylint:enable=invalid-name
+
+    def trace_custom_service(self, service_method, service_name):
+        '''Creates a tracer for custom services.
+
+            Custom service tracers are used to trace service calls for which there is no other
+            suitable tracer. To create a custom service tracer, an application can simply call
+            :meth:`trace_custom_service`.
+
+            For further information, see the high level SDK documentation at
+            <https://github.com/Dynatrace/OneAgent-SDK/#customservice>
+
+            : param str service_method:
+                The name of the service method.
+            : param str service_name:
+                The name of the service.
+
+            :rtype: tracers.CustomServiceTracer
+
+            .. versionadded:: 1.2.0
+        '''
+        return tracers.CustomServiceTracer(
+            self._nsdk, self._nsdk.customservicetracer_create(service_method, service_name))

@@ -24,11 +24,14 @@ The following classes are incoming-taggable:
   :meth:`oneagent.sdk.SDK.trace_incoming_remote_call`
 - :class:`IncomingWebRequestTracer` /
   :meth:`oneagent.sdk.SDK.trace_incoming_web_request`
+- :class:`IncomingMessageProcessTracer` /
+  :meth:`oneagent.sdk.SDK.trace_incoming_message_process`
 
 The following classes are :class:`OutgoingTaggable`:
 
 - :class:`OutgoingRemoteCallTracer`
 - :class:`OutgoingWebRequestTracer`
+- :class:`OutgoingMessageTracer`
 
 You first use either :attr:`OutgoingTaggable.outgoing_dynatrace_string_tag` or
 :attr:`OutgoingTaggable.outgoing_dynatrace_byte_tag` to retrieve a string or

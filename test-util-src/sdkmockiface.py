@@ -63,6 +63,9 @@ class DbInfoHandle(_Handle):
 class WsAppHandle(_Handle):
     pass
 
+class MessageSystemInfoHandle(_Handle):
+    pass
+
 class ThreadBoundObject(object):
     def __init__(self):
         self.tid = _thread.get_ident()
@@ -173,6 +176,18 @@ class InRemoteCallHandle(RemoteCallHandleBase):
 class OutRemoteCallHandle(RemoteCallHandleBase):
     has_out_tag = True
 class InProcessLinkTracerHandle(TracerHandle):
+    pass
+
+class CustomServiceTracerHandle(TracerHandle):
+    pass
+
+class OutMsgTracerHandle(TracerHandle):
+    def __init__(self, *args, **kwargs):
+        TracerHandle.__init__(self, *args, **kwargs)
+        self.vendor_message_id = None
+        self.correlation_id = None
+
+class InMsgProcessTracerHandle(TracerHandle):
     pass
 
 class DbRequestHandle(TracerHandle):
@@ -658,3 +673,47 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
 
     def create_in_process_link(self):
         return b'inproc'
+
+    # Messaging API
+
+    def messagingsysteminfo_create(self, vendor_name, destination_name, destination_type,
+                                   channel_type, channel_endpoint):
+        return MessageSystemInfoHandle(self)
+
+    def messagingsysteminfo_delete(self, handle):
+        _livecheck(handle, MessageSystemInfoHandle)
+        handle.close()
+
+    def outgoingmessagetracer_create(self, handle):
+        _livecheck(handle, MessageSystemInfoHandle)
+        return OutMsgTracerHandle(self)
+
+    def outgoingmessagetracer_set_vendor_message_id(self, handle, vendor_message_id):
+        _livecheck(handle, OutMsgTracerHandle)
+        handle.vendor_message_id = vendor_message_id
+
+    def outgoingmessagetracer_set_correlation_id(self, handle, correlation_id):
+        _livecheck(handle, OutMsgTracerHandle)
+        handle.correlation_id = correlation_id
+
+    def incomingmessagereceivetracer_create(self, handle):
+        _livecheck(handle, MessageSystemInfoHandle)
+        return TracerHandle(self)
+
+    def incomingmessageprocesstracer_create(self, handle):
+        _livecheck(handle, MessageSystemInfoHandle)
+        return InMsgProcessTracerHandle(self)
+
+    def incomingmessageprocesstracer_set_vendor_message_id(self, handle, message_id):
+        _livecheck(handle, InMsgProcessTracerHandle)
+
+    def incomingmessageprocesstracer_set_correlation_id(self, handle, correlation_id):
+        _livecheck(handle, InMsgProcessTracerHandle)
+
+    # Custom Service API
+
+    def customservicetracer_create(self, service_method, service_name):
+        handle = CustomServiceTracerHandle(self)
+        handle.service_method = service_method
+        handle.service_name = service_name
+        return handle

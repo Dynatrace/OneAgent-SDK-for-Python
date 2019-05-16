@@ -228,10 +228,45 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
     def customrequestattribute_add_string(self, key, value):
         pass
 
-    #pylint:enable=invalid-name
-
     def trace_in_process_link(self, link_bytes):
         pass
 
     def create_in_process_link(self):
         pass
+
+    # Messaging API
+
+    #pylint:disable=too-many-arguments
+    def messagingsysteminfo_create(self, vendor_name, destination_name, destination_type,
+                                   channel_type, channel_endpoint):
+        return NULL_HANDLE
+
+    def messagingsysteminfo_delete(self, handle):
+        pass
+
+    def outgoingmessagetracer_create(self, handle):
+        return NULL_HANDLE
+
+    def outgoingmessagetracer_set_vendor_message_id(self, handle, vendor_message_id):
+        pass
+
+    def outgoingmessagetracer_set_correlation_id(self, handle, correlation_id):
+        pass
+
+    def incomingmessagereceivetracer_create(self, handle):
+        return NULL_HANDLE
+
+    def incomingmessageprocesstracer_create(self, handle):
+        return NULL_HANDLE
+
+    def incomingmessageprocesstracer_set_vendor_message_id(self, handle, message_id):
+        pass
+
+    def incomingmessageprocesstracer_set_correlation_id(self, handle, correlation_id):
+        pass
+
+    #pylint:enable=too-many-arguments
+    #pylint:enable=invalid-name
+
+    def customservicetracer_create(self, service_method, service_name):
+        return NULL_HANDLE

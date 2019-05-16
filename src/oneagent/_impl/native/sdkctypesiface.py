@@ -481,6 +481,74 @@ class SDKDllInterface(object):
             None,
             public=False), CCString)
 
+        self._init_messaging()
+
+        self._init_custom_service()
+
+
+    def _init_custom_service(self):
+        initfn = self._initfn
+
+        initfn(
+            'customservicetracer_create_p',
+            (CCStringPInArg, CCStringPInArg),
+            handle_t).__doc__ = \
+                '(service_method, service_name) -> tracer'
+
+
+    def _init_messaging(self):
+        initfn = self._initfn
+
+        initfn(
+            'messagingsysteminfo_create_p',
+            (CCStringPInArg, CCStringPInArg, ctypes.c_int32, ctypes.c_int32, CCStringPInArg),
+            handle_t).__doc__ = \
+                '(vendor_name, destination_name, destination_type, \
+                channel_type, channel_endpoint) -> tracer'
+
+        initfn(
+            'messagingsysteminfo_delete',
+            (handle_t,),
+            None)
+
+        initfn(
+            'outgoingmessagetracer_create',
+            (handle_t,),
+            handle_t)
+
+        initfn(
+            'outgoingmessagetracer_set_vendor_message_id_p',
+            (handle_t, CCStringPInArg),
+            None).__doc__ = \
+                '(tracer_handle, vendor_message_id)'
+
+        initfn(
+            'outgoingmessagetracer_set_correlation_id_p',
+            (handle_t, CCStringPInArg),
+            None).__doc__ = '(tracer_handle, correlation_id)'
+
+        initfn(
+            'incomingmessagereceivetracer_create',
+            (handle_t,),
+            handle_t)
+
+        initfn(
+            'incomingmessageprocesstracer_create',
+            (handle_t,),
+            handle_t)
+
+        initfn(
+            'incomingmessageprocesstracer_set_vendor_message_id_p',
+            (handle_t, CCStringPInArg),
+            None).__doc__ = \
+                '(tracer_handle, vendor_message_id)'
+
+        initfn(
+            'incomingmessageprocesstracer_set_correlation_id_p',
+            (handle_t, CCStringPInArg),
+            None).__doc__ = '(tracer_handle, correlation_id)'
+
+
     def initialize(self):
         result = self._initialize()
 
