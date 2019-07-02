@@ -621,7 +621,7 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 <a name="help--support"></a>
 ## Help & Support
 
-The Dynatrace OneAgent SDK for Python is currently in beta status. The features are fully supported by Dynatrace.
+The Dynatrace OneAgent SDK for Python is fully supported by Dynatrace.
 
 <a name="documentation"></a>
 <a name="read-the-manual"></a>
