@@ -54,11 +54,11 @@ Dynatrace OneAgent version (it is the same as
 
 <a name="pycversiontab"></a>
 
-|OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|
-|:----------------------|:---------------------|:-----------------|
-|1.0                    |1.1.0                 |≥1.141            |
-|1.1                    |1.3.1                 |≥1.151            |
-|1.2                    |1.4.1                 |≥1.161            |
+|OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status|
+|:----------------------|:---------------------|:-----------------|:-------------|
+|1.0                    |1.1.0                 |≥1.141            |Supported     |
+|1.1                    |1.3.1                 |≥1.151            |Supported     |
+|1.2                    |1.4.1                 |≥1.161            |Supported     |
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -621,7 +621,11 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 <a name="help--support"></a>
 ## Help & Support
 
-The Dynatrace OneAgent SDK for Python is fully supported by Dynatrace.
+**Support policy**
+
+The Dynatrace OneAgent SDK for Python has GA status. The features are fully supported by Dynatrace.
+
+For detailed support policy see [Dynatrace OneAgent SDK help](https://github.com/Dynatrace/OneAgent-SDK#help).
 
 <a name="documentation"></a>
 <a name="read-the-manual"></a>
