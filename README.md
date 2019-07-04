@@ -54,11 +54,11 @@ Dynatrace OneAgent version (it is the same as
 
 <a name="pycversiontab"></a>
 
-|OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status|
-|:----------------------|:---------------------|:-----------------|:-------------|
-|1.0                    |1.1.0                 |≥1.141            |Supported     |
-|1.1                    |1.3.1                 |≥1.151            |Supported     |
-|1.2                    |1.4.1                 |≥1.161            |Supported     |
+|OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status     |
+|:----------------------|:---------------------|:-----------------|:------------------|
+|1.2                    |1.4.1                 |≥1.161            |Supported          |
+|1.1                    |1.3.1                 |≥1.151            |Supported          |
+|1.0                    |1.1.0                 |≥1.141            |EAP (not supported)|
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -204,16 +204,16 @@ for details on upcoming features.
 
 A more detailed specification of the features can be found in [Dynatrace OneAgent SDK](https://github.com/Dynatrace/OneAgent-SDK#features).
 
-|Feature    |Required OneAgent SDK for Python version|
+|Feature                                   |Required OneAgent SDK for Python version|
 |:-----------------------------------------|:--------|
-|Trace incoming and outgoing remote calls  |≥1.0.0   |
-|SQL database requests                     |≥1.0.0   |
-|Incoming web requests                     |≥1.0.0   |
-|Outgoing web requests                     |≥1.1.0   |
-|Custom request attributes                 |≥1.1.0   |
-|In-process linking                        |≥1.1.0   |
-|Messaging                                 |≥1.2.0   |
 |Custom services                           |≥1.2.0   |
+|Messaging                                 |≥1.2.0   |
+|In-process linking                        |≥1.1.0   |
+|Custom request attributes                 |≥1.1.0   |
+|Outgoing web requests                     |≥1.1.0   |
+|Incoming web requests                     |≥1.0.0   |
+|SQL database requests                     |≥1.0.0   |
+|Trace incoming and outgoing remote calls  |≥1.0.0   |
 
 <a name="remote-calls"></a>
 ### Remote calls
