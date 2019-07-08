@@ -40,7 +40,7 @@ CCSID_UTF8 = 1209
 CCSID_UTF16_BE = 1201
 CCSID_UTF16_LE = 1203
 
-min_stub_version = OnesdkStubVersion(1, 3, 1)
+min_stub_version = OnesdkStubVersion(1, 4, 1)
 max_stub_version = OnesdkStubVersion(2, 0, 0)
 
 bool_t = ctypes.c_int32

@@ -35,6 +35,8 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import datetime
+
 from oneagent import __version__ as version
 
 # Fix spurious "= None" for instance attributes
@@ -77,7 +79,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Dynatrace OneAgent and SDK for Python'
-copyright = '2017, Dynatrace LLC'
+copyright = str(datetime.datetime.now().year) + ', Dynatrace LLC'
 author = 'Dynatrace LLC'
 
 # The version info for the project you're documenting, acts as replacement for

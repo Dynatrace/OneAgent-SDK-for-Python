@@ -121,8 +121,8 @@ init_result = oneagent.initialize()
 print('OneAgent SDK initialization result' + repr(init_result))
 if init_result:
     print('SDK should work (but agent might be inactive).')
-if not init_result:
-    print('SDK will definitely not work (i.e. functions will be no-ops).')
+else:
+    print('SDK will definitely not work (i.e. functions will be no-ops):', init_result)
 ```
 
 See the API documentation for the [`initialize` function](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.initialize)
@@ -453,7 +453,7 @@ to the respective messaging tracer, which is an outgoing message tracer in the e
 ```python
 msi_handle = sdk.create_messaging_system_info(
 	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
-	ChannelType.TCP_IP, '10.11.12.13')
+	oneagent.sdk.Channel(oneagent.sdk.ChannelType.TCP_IP, '10.11.12.13'))
 
 with msi_handle:
 	with sdk.trace_outgoing_message(msi_handle) as tracer:
@@ -481,7 +481,7 @@ the received message. Therefore two different tracers are being used:
 ```python
 msi_handle = sdk.create_messaging_system_info(
 	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
-	ChannelType.TCP_IP, '10.11.12.13')
+	oneagent.sdk.Channel(oneagent.sdk.ChannelType.TCP_IP, '10.11.12.13'))
 
 with msi_handle:
 	# Create the receive tracer for incoming messages.
@@ -508,7 +508,7 @@ IncomingMessageReceiveTracer - just trace processing of the message by using the
 ```python
 msi_handle = sdk.create_messaging_system_info(
 	'myMessagingSystem', 'requestQueue', MessagingDestinationType.QUEUE,
-	ChannelType.TCP_IP, '10.11.12.13')
+	oneagent.sdk.Channel(oneagent.sdk.ChannelType.TCP_IP, '10.11.12.13'))
 
 def on_message_received(message):
 	# Get the Dynatrace tag from the message.
