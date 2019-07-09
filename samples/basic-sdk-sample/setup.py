@@ -28,7 +28,7 @@ setup(
     name='oneagent-sdk-basic-sample',
     version='0.0', # This sample is not separately versioned
 
-    install_requires=['oneagent-sdk==1.*,>=1.0'],
+    install_requires=['oneagent-sdk==1.*,>=1.2'],
 
     description='OneAgent SDK for Python: Basic sample application',
     long_description=long_description,

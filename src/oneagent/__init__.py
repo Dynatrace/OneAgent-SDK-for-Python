@@ -90,7 +90,7 @@ from ._impl.native.sdknulliface import SDKNullInterface
 
 # See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
 # Dependency Specification"
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default

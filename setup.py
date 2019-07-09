@@ -73,7 +73,6 @@ if __version__ != str(parse_version(__version__)):
         'Version {} normalizes to {}'.format(
             __version__, parse_version(__version__)))
 
-
 def unsupported_msg(plat_name):
     try:
         import pip
@@ -295,7 +294,7 @@ def main():
         maintainer_email='dynatrace.oneagent.sdk@dynatrace.com',
         license='Apache License 2.0',
         classifiers=[
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
             'Intended Audience :: Developers',
             'License :: OSI Approved',
             'License :: OSI Approved :: Apache Software License', # 2.0
