@@ -136,6 +136,10 @@ class SDK(object):
     def trace_sql_database_request(self, database, sql):
         '''Create a tracer for the given database info and SQL statement.
 
+        .. note::
+            Please note that SQL database traces are only created if they occur
+            within some other SDK trace (e.g. incoming remote call).
+
         :param DbInfoHandle database: Database information (see
             :meth:`create_database_info`).
         :param str sql: The SQL statement to trace.
