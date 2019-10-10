@@ -285,6 +285,8 @@ See the documentation for more information:
 * [`trace_sql_database_request`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.trace_sql_database_request)
 * [`DatabaseRequestTracer`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.DatabaseRequestTracer)
 
+Please note that SQL database traces are only created if they occur within some other SDK trace (e.g. incoming remote call).
+
 <a name="incoming-web-requests"></a>
 ### Incoming web requests
 
