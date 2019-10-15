@@ -533,7 +533,7 @@ See the documentation for more information:
 * [`trace_incoming_message_receive`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.trace_incoming_message_receive)
 * [`trace_incoming_message_process`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.trace_incoming_message_process)
 * [General information on tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
-
+* [Messaging tracers in the specification repository](https://github.com/Dynatrace/OneAgent-SDK#messaging)
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
