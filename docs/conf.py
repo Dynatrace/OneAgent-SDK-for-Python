@@ -37,7 +37,7 @@
 
 import datetime
 
-from oneagent import __version__ as version
+from oneagent.version import __version__ as version
 
 # Fix spurious "= None" for instance attributes
 # https://github.com/sphinx-doc/sphinx/issues/2044

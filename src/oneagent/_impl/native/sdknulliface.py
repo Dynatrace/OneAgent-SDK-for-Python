@@ -64,7 +64,7 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
     def agent_is_compatible(self):
         return False
 
-    def initialize(self):
+    def initialize(self, init_flags=0):
         return ErrorCode.AGENT_NOT_ACTIVE
 
     def shutdown(self):

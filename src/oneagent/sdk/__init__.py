@@ -34,7 +34,12 @@
        each channel type.
 '''
 
-from collections import namedtuple, Mapping
+from collections import namedtuple
+
+try:
+    from collections.abc import Mapping
+except (ImportError, NameError):
+    from collections import Mapping
 
 from oneagent._impl import six
 from oneagent._impl.native.nativeagent import try_get_sdk as _try_get_nsdk

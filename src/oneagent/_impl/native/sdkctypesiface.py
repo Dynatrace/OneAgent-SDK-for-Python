@@ -27,6 +27,7 @@ from os import path
 from functools import wraps
 
 from oneagent import logger
+from oneagent.version import min_stub_version, max_stub_version
 from oneagent._impl import six
 from oneagent.common import SDKError, SDKInitializationError, ErrorCode
 
@@ -39,9 +40,6 @@ CCSID_ISO8859_1 = 819 # Latin-1
 CCSID_UTF8 = 1209
 CCSID_UTF16_BE = 1201
 CCSID_UTF16_LE = 1203
-
-min_stub_version = OnesdkStubVersion(1, 4, 1)
-max_stub_version = OnesdkStubVersion(2, 0, 0)
 
 bool_t = ctypes.c_int32
 result_t = ctypes.c_uint32 if WIN32 else ctypes.c_int32
@@ -268,8 +266,8 @@ class SDKDllInterface(object):
 
         # Init/Shutdown
         initfn(
-            'initialize',
-            (),
+            'initialize_2',
+            (ctypes.c_uint32,),
             result_t,
             public=False)
         initfn(
@@ -549,8 +547,8 @@ class SDKDllInterface(object):
             None).__doc__ = '(tracer_handle, correlation_id)'
 
 
-    def initialize(self):
-        result = self._initialize()
+    def initialize(self, init_flags=0):
+        result = self._initialize_2(init_flags)
 
         self._agent_version = ufromxstr(self._agent_get_version_string()) \
                                         + '/' + self._agent_sdk_version
@@ -736,9 +734,9 @@ def loadsdk(libname=None):
         try:
             import pkg_resources
             libname = pkg_resources.resource_filename(__name__, dll_name())
-        except ImportError:
+        except Exception: #pylint:disable=broad-except
             logger.warning(
-                'Could not import pkg_resources module:'
+                'Could not get native SDK path via pkg_resources:'
                 ' loading native SDK library might fail',
                 exc_info=sys.exc_info())
             thisdir = path.dirname(path.abspath(__file__))
@@ -748,5 +746,8 @@ def loadsdk(libname=None):
         logger.info('Loading native SDK library "%s".', libname)
         return SDKDllInterface(libname)
     except OSError as e:
-        msg = 'Failed loading SDK stub from ' + libname + ': ' + str(e)
+        msg = 'Failed loading SDK stub from ' + libname + ': "' + str(e) + \
+            '". Check your installation of the oneagent-sdk Python package,' + \
+            ' e.g., try running ' + \
+            '`pip install --verbose --force-reinstall oneagent-sdk`.'
         six.raise_from(SDKError(ErrorCode.LOAD_AGENT, msg), e)

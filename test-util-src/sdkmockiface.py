@@ -403,7 +403,7 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
         return True
 
     @_checkstate(AgentState.NOT_INITIALIZED)
-    def initialize(self):
+    def initialize(self, init_flags=0):
         self._state = AgentState.ACTIVE
         return ErrorCode.SUCCESS
 

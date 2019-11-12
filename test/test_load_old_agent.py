@@ -15,16 +15,20 @@
 
 import os
 
+import pytest
+
 import oneagent
+from oneagent.version import shipped_c_stub_version
 from oneagent import InitResult
 from oneagent.common import AgentState
 
+@pytest.mark.dependsnative
 def test_load_old_agent():
     saved_path = os.environ.get('DT_AGENTLIBRARY', '')
     try:
+        assert os.environ['DT_OLDAGENTLIBRARY'] is not None
+        assert os.environ['DT_OLDAGENTLIBRARY'] != ''
         os.environ['DT_AGENTLIBRARY'] = os.environ.get('DT_OLDAGENTLIBRARY', '')
-        assert os.environ['DT_AGENTLIBRARY'] is not None
-        assert os.environ['DT_AGENTLIBRARY'] != ''
 
         sdk_options = oneagent.sdkopts_from_commandline(remove=True)
         init_result = oneagent.initialize(sdk_options)
@@ -36,7 +40,8 @@ def test_load_old_agent():
         assert sdk.agent_state == AgentState.NOT_INITIALIZED
         assert sdk.agent_found
         assert not sdk.agent_is_compatible
-        assert sdk.agent_version_string == '1.141.112.20180322-095721/1.4.1'
+
+        assert sdk.agent_version_string == '1.141.246.20180604-140607/' + shipped_c_stub_version
     finally:
         oneagent.shutdown()
         os.environ['DT_AGENTLIBRARY'] = saved_path

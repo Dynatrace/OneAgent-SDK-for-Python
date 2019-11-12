@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# Copyright 2018 Dynatrace LLC
+# Copyright 2019 Dynatrace LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,23 +55,75 @@ with io.open(path.join(_THIS_DIR, 'README.md'), encoding='utf-8') as readmefile:
     long_description = readmefile.read()
 del readmefile
 
-VER_RE = re.compile(r"^__version__ = '([^']+)'$")
 
-verfilepath = path.join(_THIS_DIR, 'src/oneagent/__init__.py')
-with io.open(verfilepath, encoding='utf-8') as verfile:
-    for line in verfile:
-        match = VER_RE.match(line)
-        if match:
-            __version__ = match.group(1)
-            break
-    else:
-        raise AssertionError('Version not found in src/oneagent/__init__.py')
+def get_version_from_pkg_info():
+    pkg_info_path = path.join(_THIS_DIR, 'PKG-INFO')
 
-del match, verfile, verfilepath, VER_RE
+    if not path.isfile(pkg_info_path):
+        return None
+
+    ver_re = re.compile(r"^Version: (.+)$")
+
+    with io.open(pkg_info_path, encoding='utf-8') as pinfofile:
+        for line in pinfofile:
+            match = ver_re.match(line)
+            if match:
+                return match.group(1)
+
+    return None
+
+def get_version_from_version_py():
+    ver_re = re.compile(r"^__version__ = '([^']+)'$")
+
+    verfilepath = path.join(_THIS_DIR, 'src/oneagent/version.py')
+    with io.open(verfilepath, encoding='utf-8') as verfile:
+        for line in verfile:
+            match = ver_re.match(line)
+            if match:
+                version = match.group(1)
+                break
+        else:
+            raise AssertionError('Version not found in src/oneagent/version.py')
+
+    build_timestamp = os.environ.get('BUILD_TIMESTAMP')
+    if build_timestamp:
+        version = '{}.{}'.format(version, re.sub(r'-0*', '.', build_timestamp))
+
+    return version
+
+
+__version__ = get_version_from_pkg_info()
+if not __version__:
+    __version__ = get_version_from_version_py()
+
 if __version__ != str(parse_version(__version__)):
     raise AssertionError(
         'Version {} normalizes to {}'.format(
             __version__, parse_version(__version__)))
+
+# This function was adapted from https://www.python.org/dev/peps/pep-0513/
+# (public domain)
+def get_glibc_version_string():
+    import ctypes
+
+    try:
+        process_namespace = ctypes.CDLL(None)
+        gnu_get_libc_version = process_namespace.gnu_get_libc_version
+
+        # Call gnu_get_libc_version, which returns a string like "2.5".
+        gnu_get_libc_version.restype = ctypes.c_char_p
+        version_str = gnu_get_libc_version()
+
+        # py2 / py3 compatibility:
+        if not isinstance(version_str, str):
+            version_str = version_str.decode("ascii")
+        return version_str
+    except Exception: #pylint:disable=broad-except
+        # Symbol doesn't exist -> therefore, we are not linked to
+        # glibc.
+        return None
+
+
 
 def unsupported_msg(plat_name):
     try:
@@ -79,6 +131,14 @@ def unsupported_msg(plat_name):
         pipver = pip.__version__
     except Exception: #pylint:disable=broad-except
         pipver = 'Unknown or not using pip'
+
+    glibc_ver = get_glibc_version_string()
+    if glibc_ver:
+        glibc = '\nGNU libc version:     ' + glibc_ver + '\n'
+    elif os.name != 'nt':
+        glibc = '\nNot using GNU libc. Note that musl libc is not supported.\n'
+    else:
+        glibc = ''
 
     return '''
 
@@ -90,7 +150,7 @@ def unsupported_msg(plat_name):
 *** https://github.com/Dynatrace/OneAgent-SDK-for-Python#requirements      ***
 ******************************************************************************
 Your pip version:     {pipver}
-Your target platform: {plat}
+Your target platform: {plat}{glibc}
 
 If you are intentionally building from source, download the OneAgent SDK for
 C/C++ that corresponds to this Python SDK (v{v}; see table at
@@ -98,7 +158,7 @@ https://github.com/Dynatrace/OneAgent-SDK-for-Python#requirements) from
 https://github.com/Dynatrace/OneAgent-SDK-for-C and set the environment variable
 {env} to the path to the shared library/DLL correponding to the platform you are
 building for.'''.format(
-    v=__version__, plat=plat_name, env=CSDK_ENV_NAME, pipver=pipver)
+    v=__version__, plat=plat_name, env=CSDK_ENV_NAME, pipver=pipver, glibc=glibc)
 
 
 def compilefile(fname, mode='exec'):
@@ -151,13 +211,22 @@ def get_dll_input_path(plat_name):
     if not sdkpath:
         warn_msg = unsupported_msg(plat_name)
         distlog.error(warn_msg)
-        raise ValueError(warn_msg)
+        distlog.warn(
+            'Continuning installation, but resulting package will always be in'
+            ' no-op mode (no connection to Dynatrace will be possible)')
+        return None
+
     if path.isfile(sdkpath):
         return sdkpath
+
     if not path.exists(sdkpath):
         raise ValueError(
             '****** Path "{}" in ${} does not exist. ******'.format(
                 sdkpath, CSDK_ENV_NAME))
+
+    # A folder is specified in skdpath. We can try to find some well-known
+    # binaries in a folder with one of two well-known structures.
+
     if not dll_info['WIN32'] and 'linux' not in plat_name:
         raise ValueError(
             '****** Your platform ({}) is not supported by the '
@@ -226,19 +295,24 @@ class PostBuildExtCommand(build_ext):
         return self.__base.get_outputs(self) + [self.get_dll_output_path()]
 
     def get_inputs(self):
+        extra_inputs = []
         try:
             dll_input = get_dll_input_path(self.plat_name)
         except ValueError:
-            return self.__base.get_inputs(self)
+            pass
         else:
-            return self.__base.get_inputs(self) + [dll_input]
+            if dll_input:
+                extra_inputs.append(dll_input)
+
+        return self.__base.get_inputs(self) + extra_inputs
 
     def run(self):
         src = get_dll_input_path(self.plat_name)
         dst = self.get_dll_output_path()
         self.__base.run(self)
         self.mkpath(path.dirname(dst))
-        self.copy_file(src, dst)
+        if src:
+            self.copy_file(src, dst)
 
     def copy_extensions_to_source(self):
         self.__base.copy_extensions_to_source(self)
@@ -247,8 +321,9 @@ class PostBuildExtCommand(build_ext):
         src_filename = get_dll_input_path(self.plat_name)
         package = 'oneagent._impl.native'
         package_dir = build_py.get_package_dir(package)
-        dest_filename = path.join(package_dir, path.basename(src_filename))
-        self.copy_file(src_filename, dest_filename)
+        if src_filename:
+            dest_filename = path.join(package_dir, path.basename(src_filename))
+            self.copy_file(src_filename, dest_filename)
 
 
 
