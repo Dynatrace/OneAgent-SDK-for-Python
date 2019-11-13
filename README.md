@@ -585,11 +585,11 @@ Known gotchas:
   Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your
   `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
 
-* Output ending in a message similar to `InitResult=InitResult(status=-2, error=SDKError(-1342308345, 'Failed loading SDK stub from .../site-packages/oneagent/_impl/native/libonesdk_shared.so: "/.../libonesdk_shared.so: cannot open shared object file: No such file or directory". Check your installation of the oneagent-sdk Python package, e.g., try running `pip install --verbose --force-reinstall oneagent-sdk`.'))`.
+* Output ending in a message like `InitResult=InitResult(status=-2, error=SDKError(-1342308345, 'Failed loading SDK stub from .../site-packages/oneagent/_impl/native/libonesdk_shared.so: "/.../libonesdk_shared.so: cannot open shared object file: No such file or directory". Check your installation of the oneagent-sdk Python package, e.g., try running `pip install --verbose --force-reinstall oneagent-sdk`.'))`.
 
   Follow the advice of the message and run `python -m pip install --verbose --force-reinstall oneagent-sdk`
   (or the equivalent pip invocation with the `--verbose` and `--force-reinstall` flags).
-  It is likely that you will now see another message similar to
+  It is likely that you will now see another message like
 
         ******************************************************************************
         *** You are trying to build the Python SDK from source.                    ***
@@ -610,7 +610,7 @@ Known gotchas:
   version corresponding to your OneAgent SDK for Python as listed in [the table in Requirements](#requirements). Then set the
   `DT_PYSDK_CSDK_PATH` environment variable to the `.so`/`.dll` file corresponding to your platform in the `lib` subdirectory of the C SDK
   and retry the installation (e.g. in a bash shell, use `export DT_PYSDK_CSDK_PATH=path/to/onesdk_shared.so`). If there is no corresponding
-  directory, your platfom is not supported. Otherwise, regardless if it works with that method or not, please report an issue as described
+  directory, your platform is not supported. Otherwise, regardless if it works with that method or not, please report an issue as described
   in [Let us help you](#let-us-help-you).
 
 
