@@ -12,6 +12,6 @@ good-names=i,j,e,_
 max-line-length=100
 
 [TYPECHECK]
-ignored-classes=oneagent._impl.native.sdkctypesiface.SDKDllInterface
+ignored-classes=oneagent._impl.native.sdkctypesiface.SDKDllInterface,oneagent.sdk.tracers.Tracer
 redefining-builtins-modules=oneagent._impl.six.moves
-disable=missing-docstring,fixme,too-few-public-methods,missing-return-doc,useless-object-inheritance
+disable=missing-docstring,fixme,too-few-public-methods,missing-return-doc,useless-object-inheritance,cyclic-import,import-outside-toplevel

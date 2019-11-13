@@ -225,12 +225,10 @@ class DatabaseRequestTracer(Tracer):
 class IncomingRemoteCallTracer(Tracer):
     '''Traces an incoming remote call. See
     :meth:`oneagent.sdk.SDK.trace_incoming_remote_call`.'''
-    pass
 
 class OutgoingRemoteCallTracer(Tracer, OutgoingTaggable):
     '''Traces an outgoing remote call. See
     :meth:`oneagent.sdk.SDK.trace_outgoing_remote_call`.'''
-    pass
 
 def _make_add_kvs_fn(fnname):
     add_kv_name = fnname
@@ -367,7 +365,6 @@ class InProcessLinkTracer(Tracer):
 
     .. versionadded:: 1.1.0
     '''
-    pass
 
 class OutgoingMessageTracer(Tracer, OutgoingTaggable):
     '''Tracer for outgoing messages.
@@ -408,7 +405,6 @@ class IncomingMessageReceiveTracer(Tracer):
 
         .. versionadded:: 1.2.0
     '''
-    pass
 
 class IncomingMessageProcessTracer(Tracer):
     '''Tracer for processing incoming messages.
@@ -442,4 +438,3 @@ class CustomServiceTracer(Tracer):
 
         .. versionadded:: 1.2.0
     '''
-    pass

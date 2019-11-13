@@ -82,15 +82,13 @@ from collections import namedtuple
 from threading import Lock
 
 from oneagent._impl.six.moves import range #pylint:disable=import-error
+from oneagent.version import __version__
 
-from .common import SDKError, SDKInitializationError, ErrorCode
+from .common import SDKError, SDKInitializationError, ErrorCode, _ONESDK_INIT_FLAG_FORKABLE
 from ._impl.native import nativeagent
 from ._impl.native.nativeagent import try_get_sdk
 from ._impl.native.sdknulliface import SDKNullInterface
-
-# See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
-# Dependency Specification"
-__version__ = '1.2.1'
+from ._impl.native.sdkdllinfo import WIN32
 
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default
@@ -169,7 +167,7 @@ def get_sdk():
 
     return _sdk_instance
 
-def initialize(sdkopts=(), sdklibname=None):
+def initialize(sdkopts=(), sdklibname=None, forkable=False):
     '''Attempts to initialize the SDK with the specified options.
 
     Even if initialization fails, a dummy SDK will be available so that SDK
@@ -180,8 +178,36 @@ def initialize(sdkopts=(), sdklibname=None):
     will be ignored (the return value will have the
     :data:`InitResult.STATUS_ALREADY_INITIALIZED` status code in that case).
 
+    When setting the ``forkable`` flag the OneAgent SDK for Python will only be partly
+    initialized. In this special **parent-initialized** initialization state, only the following
+    functions can be called:
+
+    * All functions that are valid to call before calling initialize remain valid.
+    * :meth:`oneagent.sdk.SDK.agent_version_string` works as expected.
+    * :meth:`oneagent.sdk.SDK.agent_state` will return
+        :data:`oneagent.common.AgentState.TEMPORARILY_INACTIVE` - but see the note below.
+    * :meth:`oneagent.sdk.SDK.set_diagnostic_callback` works as expected, the callback will be
+        carried over to forked child processes.
+    * It is recommended you call :func:`shutdown` when the original process will not fork any more
+        children that want to use the SDK.
+
+    After you fork, the child becomes **pre-initialized**: the first call to an SDK function that
+    needs a **fully initialized** agent will automatically complete the initialization.
+
+    You can still fork another child (e.g. in a double-fork scenario) in the **pre-initialized**
+    state. However if you fork another child in the **fully initialized** state, it will not be
+    able to use the SDK - not even if it tries to shut down the SDK and initialize it again.
+
+    .. note:: Calling :meth:`oneagent.sdk.SDK.agent_state` in the **pre-initialized** state will
+        cause the agent to become **fully initialized**.
+
+    All children forked from a **parent-initialized** process will use the same agent. That agent
+    will shut down when all child processes and the original **parent-initialized** process have
+    terminated or called shutdown. Calling :func:`shutdown` in a **pre-initialized** process is
+    not required otherwise.
+
     :param sdkopts: A sequence of strings of the form
-        :samp:`{NAME}={VALUE}` that set the given SDK options. Igored in all but
+        :samp:`{NAME}={VALUE}` that set the given SDK options. Ignored in all but
         the first :code:`initialize` call.
     :type sdkopts: ~typing.Iterable[str]
     :param str sdklibname: The file or directory name of the native C SDK
@@ -189,6 +215,7 @@ def initialize(sdkopts=(), sdklibname=None):
         used. Using a value other than None is only acceptable for debugging.
         You are responsible for providing a native SDK version that matches the
         Python SDK version.
+    :param bool forkable: Use the SDK in 'forkable' mode.
 
     :rtype: .InitResult
     '''
@@ -198,14 +225,14 @@ def initialize(sdkopts=(), sdklibname=None):
 
     with _sdk_ref_lk:
         logger.debug("initialize: ref count = %d", _sdk_ref_count)
-        result = _try_init_noref(sdkopts, sdklibname)
+        result = _try_init_noref(sdkopts, sdklibname, forkable)
         if _sdk_instance is None:
             _sdk_instance = SDK(try_get_sdk())
         _sdk_ref_count += 1
     return result
 
 
-def _try_init_noref(sdkopts=(), sdklibname=None):
+def _try_init_noref(sdkopts=(), sdklibname=None, forkable=False):
     global _should_shutdown #pylint:disable=global-statement
 
     sdk = nativeagent.try_get_sdk()
@@ -236,7 +263,12 @@ def _try_init_noref(sdkopts=(), sdklibname=None):
                     err,
                     sdk.strerror(err))
 
-        nativeagent.checkresult(sdk, sdk.initialize(), 'onesdk_initialize')
+        if WIN32 and forkable:
+            logger.warning('SDK can''t be initialized in forkable mode on Windows and Solaris')
+
+        flags = _ONESDK_INIT_FLAG_FORKABLE if forkable else 0
+
+        nativeagent.checkresult(sdk, sdk.initialize(flags), 'onesdk_initialize_2')
         _should_shutdown = True
         logger.debug("initialize successful")
         return InitResult(

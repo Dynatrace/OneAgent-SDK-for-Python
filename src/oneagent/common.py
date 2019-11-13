@@ -26,8 +26,24 @@ _DEBUG_LEAKS = False
 if _DEBUG_LEAKS:
     import traceback
 
-#: The Dynatrace Tag request header name which is used to transport the tag between agents.
+#: The Dynatrace Tag request header name which is used to transport the tag between agents
+#: (as a string tag).
 DYNATRACE_HTTP_HEADER_NAME = 'X-dynaTrace'
+
+#: The Dynatrace Tag messaging property name which is is used to transport the tag between agents
+#: (as a byte tag).
+#:
+#: .. versionadded:: 1.3
+DYNATRACE_MESSAGE_PROPERTY_NAME = "dtdTraceTagInfo"
+
+#: DEPRECATED alias for :data:`DYNATRACE_MESSAGE_PROPERTY_NAME`
+#:
+#: .. deprecated:: 1.3
+DYNATRACE_MESSAGE_PROPERTYNAME = DYNATRACE_MESSAGE_PROPERTY_NAME
+
+
+#: Allow SDK to be used in forked child processes.
+_ONESDK_INIT_FLAG_FORKABLE = 1
 
 class _Uninstantiable(object):
     '''Classes deriving from this class cannot be instantiated.'''

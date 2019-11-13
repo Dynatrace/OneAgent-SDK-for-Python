@@ -195,69 +195,70 @@ def chk_all(vals, chk):
     for val in vals:
         exec_chk(chk, val)
 
+def check_remote_node(node):
+    assert node.vals[:3] == (
+        'dummyPyMethod', 'DummyPyService',
+        'dupypr://localhost/dummyEndpoint')
+    assert node.protocol_name == 'DUMMY_PY_PROTOCOL'
+
+def check_root(root):
+    assert type(root) is sdkmockiface.InRemoteCallHandle
+    assert root.vals == ('main', 'main', 'main')
+
+    chk_seq(
+        root.children,
+        [check_remote_child_ok] * 2 + [check_remote_child_err])
+
+def check_remote_child(child):
+    link, node = child
+    assert link == sdkmockiface.TracerHandle.LINK_CHILD
+    assert type(node) is sdkmockiface.OutRemoteCallHandle
+    check_remote_node(node)
+    assert node.vals[3:] == (
+        onesdk.ChannelType.IN_PROCESS, 'localhost')
+
+def check_remote_child_err(child):
+    check_remote_child(child)
+    node = child[1]
+    assert node.err_info == (
+        RTERR_QNAME, 'Remote call failed on the server side.')
+
+    def check_linked_remote_thread_err(rmchild):
+        rmlink, rmnode = rmchild
+        assert rmlink == sdkmockiface.TracerHandle.LINK_TAG
+        assert type(rmnode) is sdkmockiface.InRemoteCallHandle
+        check_remote_node(rmnode)
+        assert not rmnode.children
+
+    chk_seq(node.children, [check_linked_remote_thread_err])
+
+def check_remote_child_ok(child):
+    check_remote_child(child)
+    node = child[1]
+    assert node.err_info is None
+
+    def check_linked_remote_thread(rmchild):
+        rmlink, rmnode = rmchild
+        assert rmlink == sdkmockiface.TracerHandle.LINK_TAG
+        assert type(rmnode) is sdkmockiface.InRemoteCallHandle
+        check_remote_node(rmnode)
+        assert rmnode.children
+
+        def chk_dbcall(dbchild):
+            dblnk, dbnode = dbchild
+            assert dblnk == sdkmockiface.TracerHandle.LINK_CHILD
+            assert type(dbnode) is sdkmockiface.DbRequestHandle
+
+        chk_all(rmnode.children, chk_dbcall)
+
+    chk_seq(node.children, [check_linked_remote_thread])
+
 def test_public_sdk_sample(native_sdk):
     nativeagent._force_initialize(native_sdk) #pylint:disable=protected-access
     from . import onesdksamplepy
     onesdksamplepy.main()
     assert_resolve_all(native_sdk)
 
-    def check_remote_node(node):
-        assert node.vals[:3] == (
-            'dummyPyMethod', 'DummyPyService',
-            'dupypr://localhost/dummyEndpoint')
-        assert node.protocol_name == 'DUMMY_PY_PROTOCOL'
-
-    def check_root(root):
-        assert type(root) is sdkmockiface.InRemoteCallHandle
-        assert root.vals == ('main', 'main', 'main')
-
-        def check_remote_child(child):
-            link, node = child
-            assert link == sdkmockiface.TracerHandle.LINK_CHILD
-            assert type(node) is sdkmockiface.OutRemoteCallHandle
-            check_remote_node(node)
-            assert node.vals[3:] == (
-                onesdk.ChannelType.IN_PROCESS, 'localhost')
-
-        def check_remote_child_err(child):
-            check_remote_child(child)
-            node = child[1]
-            assert node.err_info == (
-                RTERR_QNAME, 'Remote call failed on the server side.')
-
-            def check_linked_remote_thread_err(rmchild):
-                rmlink, rmnode = rmchild
-                assert rmlink == sdkmockiface.TracerHandle.LINK_TAG
-                assert type(rmnode) is sdkmockiface.InRemoteCallHandle
-                check_remote_node(rmnode)
-                assert not rmnode.children
-
-            chk_seq(node.children, [check_linked_remote_thread_err])
-
-        def check_remote_child_ok(child):
-            check_remote_child(child)
-            node = child[1]
-            assert node.err_info is None
-
-            def check_linked_remote_thread(rmchild):
-                rmlink, rmnode = rmchild
-                assert rmlink == sdkmockiface.TracerHandle.LINK_TAG
-                assert type(rmnode) is sdkmockiface.InRemoteCallHandle
-                check_remote_node(rmnode)
-                assert rmnode.children
-
-                def chk_dbcall(dbchild):
-                    dblnk, dbnode = dbchild
-                    assert dblnk == sdkmockiface.TracerHandle.LINK_CHILD
-                    assert type(dbnode) is sdkmockiface.DbRequestHandle
-
-                chk_all(rmnode.children, chk_dbcall)
-
-            chk_seq(node.children, [check_linked_remote_thread])
-
-        chk_seq(
-            root.children,
-            [check_remote_child_ok] * 2 + [check_remote_child_err])
 
     def check_is_linked(root):
         assert root.linked_parent

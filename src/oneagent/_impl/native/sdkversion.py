@@ -29,10 +29,10 @@ class OnesdkStubVersion(ctypes.Structure):
 
         if self.major > version.major:
             return True
-        elif self.major == version.major:
+        if self.major == version.major:
             if self.minor > version.minor:
                 return True
-            elif self.minor == version.minor:
+            if self.minor == version.minor:
                 return self.patch > version.patch
 
         return False

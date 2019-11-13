@@ -19,14 +19,14 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
   * [Incoming web requests](#incoming-web-requests)
   * [Outgoing web requests](#outgoing-web-requests)
   * [Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution)
-  * [Custom request attributes](#custom-request-attributes)
+  * [Custom Request Attributes](#custom-request-attributes)
   * [Custom services](#custom-services)
   * [Messaging](#messaging)
-    * [Outgoing Messages](#outgoing-messaging)
-    * [Incoming Messages](#incoming-messaging)
+    + [Outgoing Messages](#outgoing-messages)
+    + [Incoming Messages](#incoming-messages)
+- [Using the OneAgent SDK for Python with forked child processes (only available on Linux)](#using-the-oneagent-sdk-for-python-with-forked-child-processes-only-available-on-linux)
 - [Troubleshooting](#troubleshooting)
-  * [Installation issues](#installation-issues)
-  * [Post-installation issues](#post-installation-issues)
+  * [Extended SDK State](#extended-sdk-state)
 - [Repository contents](#repository-contents)
 - [Help & Support](#help--support)
   * [Read the manual](#read-the-manual)
@@ -40,12 +40,14 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
 ## Requirements
 
 The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
-from <https://python.org>) is supported and only on Linux (musl libc is currently not supported) and Windows with the x86 (including
-x86-64) architecture. Additionally, `pip` ≥ 8.1.0 (2016-03-05) is required for installation.
+from <https://python.org>) is supported and only on Linux (musl libc which is used, e.g., on Alpine Linux, is currently not supported)
+and Windows with the x86 (including x86-64) architecture.
+Additionally, `pip` ≥ 8.1.0 (2016-03-05) is required for installation, and on Linux, the system should be
+[`manylinux1`-compatible](https://www.python.org/dev/peps/pep-0513/) to ensure a smooth installation via `pip`.
 
 The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C)
 and therefore the SDK for C/C++ is required and delivered with the Python SDK. See
-[here](https://github.com/Dynatrace/OneAgent-SDK-for-C#dynatrace-oneagent-sdk-for-cc-requirements)
+[here](https://github.com/Dynatrace/OneAgent-SDK-for-C#requirements)
 for its requirements, which also apply to the SDK for Python.
 
 The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table along with the required
@@ -56,6 +58,7 @@ Dynatrace OneAgent version (it is the same as
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status     |
 |:----------------------|:---------------------|:-----------------|:------------------|
+|1.3                    |1.5.1                 |≥1.179            |Supported          |
 |1.2                    |1.4.1                 |≥1.161            |Supported          |
 |1.1                    |1.3.1                 |≥1.151            |Supported          |
 |1.0                    |1.1.0                 |≥1.141            |EAP (not supported)|
@@ -429,7 +432,6 @@ the callback of a periodic timer.
 ```python
 with sdk.trace_custom_service('onTimer', 'CleanupTask'):
 	# Do the cleanup task
-	:
 ```
 
 Check out the documentation at:
@@ -535,31 +537,34 @@ See the documentation for more information:
 * [General information on tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
 * [Messaging tracers in the specification repository](https://github.com/Dynatrace/OneAgent-SDK#messaging)
 
+<a name="forking"></a>
+<a name="using-the-oneagent-sdk-for-python-with-forked-child-processes-only-available-on-linux"></a>
+## Using the OneAgent SDK for Python with forked child processes (only available on Linux)
+
+Some applications, especially web servers, use a concurrency model that is based on forked child processes.
+Typically a master process is started which is responsible only for creating and managing child processes by means of forking.
+The child processes do the real work, for example handling web requests.
+
+The recommended way to use the Python SDK in such a scenario is as follows: You initialize the SDK in the master process setting
+the `forkable` argument to `True`.
+
+```python
+oneagent.initialize(sdk_options, forkable=True)
+```
+
+This way you will not be able to use the SDK in the master process (attempts to do so will be ignored, if applicable with
+an error code), but all forked child processes will share the same agent. This has a lower overhead, for example the
+startup of worker processes is not slowed down, and the per-worker memory overhead is reduced.
+
+For more information on forked child processes, take a look at those resources:
+* [Documentation on forking for the Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#forking)
+* [Forking sample application](./samples/fork-sdk-sample/fork_sdk_sample.py)
+
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
 <a name="installation-issues"></a>
-### Installation issues
-
-* `ValueError` when installing, complaining about missing `DT_PYSDK_CSDK_PATH`.
-
-  Make sure you are using pip to install a prebuilt package wheel for your system from PyPI, as described in [Using the OneAgent SDK for
-  Python in your application](#installation). Also make sure you are using an up-to date version of `pip`, `setuptools` and `wheel`. You can
-  try upgrading them with `python -m pip install --upgrade pip setuptools wheel` (make sure to use the same `python` that you use to install
-  the `oneagent-sdk` package). ATTENTION: If you use the system-provided pip (e.g. installed via `apt-get` on Ubuntu) you should instead use
-  a `pip` inside a `virtualenv` (the same as your project), as uprading system-provided packages via `pip` may cause issues.
-
-  If this does not resolve the issue, make sure you are using a supported platform, as listed in [Requirements](#requirements). If you *are*
-  using a supported system, you can try downloading the [OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) in the
-  version corresponding to your OneAgent SDK for Python as listed in [the table in Requirements](#requirements). Then set the
-  `DT_PYSDK_CSDK_PATH` environment variable to the `.so`/`.dll` file corresponding to your platform in the `lib` subdirectory of the C SDK
-  and retry the installation (e.g. in a bash shell, use `export DT_PYSDK_CSDK_PATH=path/to/onesdk_shared.so`). If there is no corresponding
-  directory, your platfom is not supported. Otherwise, regardless if it works with that method or not, please report an issue as desribed in
-  [Let us help you](#let-us-help-you).
-
-
 <a name="post-installation-issues"></a>
-### Post-installation issues
 
 To debug your OneAgent SDK for Python installation, execute the following Python code:
 
@@ -579,6 +584,34 @@ Known gotchas:
 
   Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your
   `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
+
+* Output ending in a message like `InitResult=InitResult(status=-2, error=SDKError(-1342308345, 'Failed loading SDK stub from .../site-packages/oneagent/_impl/native/libonesdk_shared.so: "/.../libonesdk_shared.so: cannot open shared object file: No such file or directory". Check your installation of the oneagent-sdk Python package, e.g., try running `pip install --verbose --force-reinstall oneagent-sdk`.'))`.
+
+  Follow the advice of the message and run `python -m pip install --verbose --force-reinstall oneagent-sdk`
+  (or the equivalent pip invocation with the `--verbose` and `--force-reinstall` flags).
+  It is likely that you will now see another message like
+
+        ******************************************************************************
+        *** You are trying to build the Python SDK from source.                    ***
+        *** This could mean that you are using an outdated version of pip (older   ***
+        *** than 8.1.0) or you are attempting to install the SDK on an             ***
+        *** unsupported platform. Please check the requirements at                 ***
+        *** https://github.com/Dynatrace/OneAgent-SDK-for-Python#requirements      ***
+        ******************************************************************************
+
+  Make sure you are using pip to install a prebuilt package wheel for your system from PyPI, as described in [Using the OneAgent SDK for
+  Python in your application](#installation). Also make sure you are using an up-to date version of `pip`, `setuptools` and `wheel`. You can
+  try upgrading them with `python -m pip install --upgrade pip setuptools wheel` (make sure to use the same `python` that you use to install
+  the `oneagent-sdk` package). ATTENTION: If you use the system-provided pip (e.g. installed via `apt-get` on Ubuntu) you should instead use
+  a `pip` inside a `virtualenv` (the same as your project), as upgrading system-provided packages via `pip` may cause issues.
+
+  If this does not resolve the issue, make sure you are using a supported platform, as listed in [Requirements](#requirements). If you *are*
+  using a supported system, you can try downloading the [OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C) in the
+  version corresponding to your OneAgent SDK for Python as listed in [the table in Requirements](#requirements). Then set the
+  `DT_PYSDK_CSDK_PATH` environment variable to the `.so`/`.dll` file corresponding to your platform in the `lib` subdirectory of the C SDK
+  and retry the installation (e.g. in a bash shell, use `export DT_PYSDK_CSDK_PATH=path/to/onesdk_shared.so`). If there is no corresponding
+  directory, your platform is not supported. Otherwise, regardless if it works with that method or not, please report an issue as described
+  in [Let us help you](#let-us-help-you).
 
 
 <a name="extended-sdk-state"></a>
