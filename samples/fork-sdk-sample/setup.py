@@ -28,7 +28,7 @@ setup(
     name='oneagent-sdk-fork-sample',
     version='0.0', # This sample is not separately versioned
 
-    install_requires=['oneagent-sdk==1.*,>=1.3'],
+    install_requires=['oneagent-sdk==1.*,>=1.4'],
 
     description='OneAgent SDK for Python: Fork sample application',
     long_description=long_description,
@@ -38,7 +38,7 @@ setup(
     maintainer_email='dynatrace.oneagent.sdk@dynatrace.com',
     license='Apache License 2.0',
     entry_points={
-        'console_scripts': ['oneagent-sdk-basic-sample=fork_sdk_sample:main'],
+        'console_scripts': ['oneagent-sdk-fork-sample=fork_sdk_sample:main'],
     },
     classifiers=[
         'Intended Audience :: Developers',

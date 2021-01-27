@@ -275,12 +275,16 @@ class SDKDllInterface(object):
             (),
             result_t)
 
-        # Missing: agent_internl_dispatch(int32, void*); probably useless
+        initfn(
+            'agent_set_warning_callback',
+            (agent_logging_callback_t,),
+            result_t,
+            public=False)
 
         initfn(
-            'agent_set_logging_callback',
+            'agent_set_verbose_callback',
             (agent_logging_callback_t,),
-            None,
+            result_t,
             public=False)
 
         initfn(
@@ -288,6 +292,22 @@ class SDKDllInterface(object):
             (result_t, xchar_p, ctypes.c_size_t),
             xchar_p,
             public=False)
+
+
+        initfn(
+            'agent_get_fork_state',
+            (),
+            ctypes.c_int32)
+
+        initfn(
+            'ex_api_enable_techtype',
+            (),
+            result_t,
+            public=False)
+        initfn(
+            'ex_agent_add_process_technology_p',
+            (ctypes.c_int32, CCStringPInArg, CCStringPInArg),
+            None).__doc__ = '''(tech_type, tech_edition, tech_version)'''
 
         # Specific nodes
 
@@ -559,6 +579,12 @@ class SDKDllInterface(object):
         self._agent_found = found.value != 0
         self._agent_is_compatible = compatible.value != 0
 
+        enable_result = self._ex_api_enable_techtype()
+        if self._agent_is_compatible and enable_result != ErrorCode.SUCCESS:
+            logger.warning(
+                "Tech type reporting API could not be enabled: %d %s",
+                enable_result, self.strerror(enable_result))
+
         return result
 
     def agent_found(self):
@@ -678,14 +704,16 @@ class SDKDllInterface(object):
     def agent_get_version_string(self):
         return self._agent_version
 
-    def agent_set_logging_callback(self, callback):
+    def _invoke_agent_log_cb_setter(self, callback, setter, update_stored_cb):
+        result = None
+        store_c_cb = lambda c_cb: setattr(self, "_diag_cb_" + setter.__name__, c_cb)
         if callback is None:
-            self._agent_set_logging_callback(
-                ctypes.cast(None, agent_logging_callback_t))
-            self._diag_cb = None
-            self._py_diag_cb = None
+            result = setter(ctypes.cast(None, agent_logging_callback_t))
+            if result == ErrorCode.SUCCESS:
+                store_c_cb(None)
+                if update_stored_cb:
+                    self._py_diag_cb = None
         else:
-
             @wraps(callback)
             def cb_wrapper(msg):
                 if isinstance(msg, six.binary_type):
@@ -693,9 +721,21 @@ class SDKDllInterface(object):
                 return callback(msg)
 
             c_cb = agent_logging_callback_t(cb_wrapper)
-            self._agent_set_logging_callback(c_cb)
-            self._diag_cb = c_cb
-            self._py_diag_cb = cb_wrapper
+            result = setter(c_cb)
+            if result == ErrorCode.SUCCESS:
+                store_c_cb(c_cb)
+                if update_stored_cb:
+                    self._py_diag_cb = cb_wrapper
+        return result
+
+
+    def agent_set_warning_callback(self, callback):
+        return self._invoke_agent_log_cb_setter(
+            callback, self._agent_set_warning_callback, update_stored_cb=True)
+
+    def agent_set_verbose_callback(self, callback):
+        return self._invoke_agent_log_cb_setter(
+            callback, self._agent_set_verbose_callback, update_stored_cb=False)
 
     def __del__(self):
         # __del__ is also called when __init__ fails, so safeguard against that

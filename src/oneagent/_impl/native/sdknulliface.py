@@ -22,7 +22,7 @@ import sys
 
 from oneagent._impl import six
 
-from oneagent.common import ErrorCode, AgentState
+from oneagent.common import ErrorCode, AgentState, AgentForkState
 
 NULL_HANDLE = 0
 
@@ -75,8 +75,19 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         # is what the stub also returns if it cannot find the agent.
         return AgentState.NOT_INITIALIZED
 
-    def agent_set_logging_callback(self, callback):
+    def agent_get_fork_state(self):
+        return AgentForkState.ERROR
+
+    def ex_agent_add_process_technology(self, tech_type, tech_edition, tech_version):
+        pass
+
+
+    def agent_set_warning_callback(self, callback):
         self._diag_cb = callback
+        return ErrorCode.SUCCESS
+
+    def agent_set_verbose_callback(self, callback):
+        return ErrorCode.SUCCESS
 
     def agent_get_logging_callback(self):
         return self._diag_cb

@@ -39,8 +39,16 @@ getsdk = oneagent.get_sdk # Just to make the code shorter.
 def do_some_fancy_stuff(proc_number):
     sdk = getsdk()
 
+    # Initially, the state in the child will be PRE_INITIALIZED (2).
+    print('Agent fork state (child process before SDK call):', sdk.agent_fork_state)
+
     # The agent state in the child process should be ACTIVE (0).
     print('Agent state (child process #{}): {}'.format(proc_number, sdk.agent_state), flush=True)
+
+    # After calling any SDK function but agent_fork_state,
+    # the state in the child will be FULLY_INITIALIZED (3).
+    # In this case the SDK function called was the agent_state property accessed above.
+    print('Agent fork state (child process after SDK call):', sdk.agent_fork_state)
 
     print('Agent found:', sdk.agent_found)
     print('Agent is compatible:', sdk.agent_is_compatible)
@@ -104,6 +112,9 @@ def main():
         # The agent state is one of the integers in oneagent.sdk.AgentState.
         # Since we're using the 'forkable' mode the state will be TEMPORARILY_INACTIVE (1) on Linux.
         print('Agent state (parent process):', sdk.agent_state)
+
+        # In the parent, the state will be PARENT_INITIALIZED (1).
+        print('Agent fork state (parent process):', sdk.agent_fork_state)
 
         # The instance attribute 'agent_found' indicates whether an agent could be found or not.
         print('Agent found:', sdk.agent_found)

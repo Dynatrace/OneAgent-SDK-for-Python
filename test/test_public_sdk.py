@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import pytest
 
+import oneagent
 from oneagent import sdk as onesdk
 from oneagent._impl import six
 from oneagent._impl.native import nativeagent
@@ -253,10 +254,21 @@ def check_remote_child_ok(child):
 
     chk_seq(node.children, [check_linked_remote_thread])
 
-def test_public_sdk_sample(native_sdk):
-    nativeagent._force_initialize(native_sdk) #pylint:disable=protected-access
+def test_public_sdk_sample(native_sdk_noinit, monkeypatch):
+    # pylint:disable=protected-access
+    monkeypatch.setattr(
+        nativeagent,
+        "initialize",
+        lambda libname: nativeagent._force_initialize(native_sdk_noinit))
     from . import onesdksamplepy
     onesdksamplepy.main()
+    native_sdk = native_sdk_noinit
+
+    pysdk_tech = sdkmockiface.ProcessTech(
+        oneagent._PROCESS_TECH_ONEAGENT_SDK, 'Python', oneagent.__version__)
+    assert pysdk_tech in native_sdk.techs
+    assert any(tt for tt in native_sdk.techs if tt.type == oneagent._PROCESS_TECH_PYTHON)
+
     assert_resolve_all(native_sdk)
 
 

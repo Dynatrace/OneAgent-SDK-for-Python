@@ -51,6 +51,24 @@ class _Uninstantiable(object):
     def __new__(cls):
         raise ValueError('Attempt to instantiate')
 
+def _add_enum_helpers(decorated_cls):
+    # pylint:disable=protected-access
+    decorated_cls._enum_name_by_val = dict()
+    for key in dir(decorated_cls):
+        val = getattr(decorated_cls, key)
+        if isinstance(val, int):
+            decorated_cls._enum_name_by_val.setdefault(val, key)
+
+    @classmethod
+    def _value_name(cls, val):
+        result = cls._enum_name_by_val.get(val) # pylint:disable=no-member
+        if result is None:
+            return "<Unknown " + cls.__name__ + " value " + repr(val) + ">"
+        return cls.__name__ + "." + result
+    decorated_cls._value_name = _value_name
+    return decorated_cls
+
+
 class AgentState(_Uninstantiable):
     '''Constants for the agent's state. See
     :attr:`oneagent.sdk.SDK.agent_state`.'''
@@ -124,6 +142,34 @@ class ErrorCode(_Uninstantiable):
     #: The operation failed because this is the child process of a fork that
     #: occurred while the SDK was initialized.
     FORK_CHILD = _ERROR_BASE + 13
+
+class AgentForkState(_Uninstantiable):
+    '''Constants for the agent's fork state. See
+    :attr:`oneagent.sdk.SDK.agent_fork_state`.'''
+
+    #: SDK cannot be used in this process, but forked processes may use the SDK.
+    #: This is the state of the process
+    #: that called :func:`oneagent.initialize` with :code:`forkable=True`
+    PARENT_INITIALIZED = 1
+
+    #: Forked processes can use the SDK.
+    #: Using the SDK in this process is allowed but
+    #: changes the state to :attr:`.FULLY_INITIALIZED`
+    #: This is the state of all child processes
+    #: of a process that is :attr:`.PARENT_INITIALIZED`.
+    PRE_INITIALIZED = 2
+
+    #: SDK can be used, forked processes may not use the SDK.
+    #: This is the state of a process that was previously :attr:`.PRE_INITIALIZED`
+    #: and then called an SDK function.
+    FULLY_INITIALIZED = 3
+
+    #: SDK can be used, forked processes may not use the SDK,
+    #: :func:`oneagent.initialize` was called without :code:`forkable=True`.
+    NOT_FORKABLE = 4
+
+    #: Some error occurred while trying to determine the agent fork state.
+    ERROR = -1
 
 class MessageSeverity(_Uninstantiable): # Private
     '''Constants for the severity of log messages.

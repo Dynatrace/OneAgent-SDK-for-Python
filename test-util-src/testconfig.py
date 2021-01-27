@@ -27,9 +27,8 @@ def setup_logging():
     logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
-def native_sdk():
+def native_sdk_noinit():
     nsdk = sdkmockiface.SDKMockInterface()
-    nsdk.initialize()
     yield nsdk
     for i, root in enumerate(nsdk.finished_paths):
         itag = root.in_tag_as_id
@@ -38,6 +37,12 @@ def native_sdk():
         else:
             rootstr = root.dump()
         print('root#{:2}: {}'.format(i, rootstr))
+
+@pytest.fixture
+def native_sdk(native_sdk_noinit):
+    native_sdk_noinit.initialize()
+    yield native_sdk_noinit
+
 
 
 @pytest.fixture

@@ -26,12 +26,13 @@ import threading
 import base64
 import struct
 from itertools import chain
+from collections import namedtuple
 
 
 from oneagent._impl.six.moves import _thread, range #pylint:disable=import-error
 
 from oneagent._impl import six
-from oneagent.common import AgentState, ErrorCode, MessageSeverity
+from oneagent.common import AgentState, AgentForkState, ErrorCode, MessageSeverity
 
 class SDKLeakWarning(RuntimeWarning):
     '''Warning that is emitted when a SDK resource was not properly disposed
@@ -308,14 +309,17 @@ def _mk_add_kvs_fn(adder, web_req_handle_type):
             adder(self, tracer_h, key, val)
     return add_kvs
 
+ProcessTech = namedtuple('ProcessTech', 'type edition version')
+
 class SDKMockInterface(object): #pylint:disable=too-many-public-methods
     def __init__(self):
-        self._diag_cb = self.stub_default_logging_function
+        self._diag_cb = lambda text: self.stub_default_logging_function(text, 0)
         self._log_cb = self.stub_default_logging_function
         self._state = AgentState.NOT_INITIALIZED
         self._log_level = MessageSeverity.FINEST
         self._path_tls = threading.local()
         self.finished_paths = []
+        self.techs = []
         self.finished_paths_lk = threading.RLock()
 
     def all_finished_nodes(self):
@@ -389,6 +393,7 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
     def stub_set_logging_callback(self, sink):
         self._log_cb = sink
 
+
     @_checkstate(AgentState.NOT_INITIALIZED)
     def stub_free_variables(self):
         pass
@@ -418,6 +423,17 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
     def agent_set_logging_callback(self, callback):
         self._diag_cb = callback
 
+    def agent_set_warning_callback(self, callback):
+        if self._state == AgentState.NOT_INITIALIZED:
+            return ErrorCode.GENERIC
+        self._diag_cb = callback
+        return ErrorCode.SUCCESS
+
+    def agent_set_verbose_callback(self, callback):
+        if self._state != AgentState.NOT_INITIALIZED:
+            return ErrorCode.GENERIC
+        return ErrorCode.SUCCESS
+
     def agent_get_logging_callback(self):
         return self._diag_cb
 
@@ -427,6 +443,15 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
         elif error_code == ErrorCode.GENERIC:
             return u'Generic error.'
         return u'Unknown error #' + str(error_code)
+
+    def agent_get_fork_state(self):
+        return AgentForkState.ERROR
+
+    def ex_agent_add_process_technology(self, tech_type, tech_edition, tech_version):
+        _typecheck(tech_type, int)
+        _strcheck(tech_edition)
+        _strcheck(tech_version)
+        self.techs.append(ProcessTech(type=tech_type, edition=tech_edition, version=tech_version))
 
     def webapplicationinfo_create(self, vhost, appid, ctxroot):
         _strcheck(vhost)
