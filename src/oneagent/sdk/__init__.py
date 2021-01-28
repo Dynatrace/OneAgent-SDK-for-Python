@@ -71,7 +71,7 @@ def _get_kvc(kv_arg):
         kv_arg[1],
         kv_arg[2] if len(kv_arg) == 3 else len(kv_arg[0]))
 
-class SDK(object):
+class SDK(object): # pylint:disable=too-many-public-methods
     '''The main entry point to the Dynatrace SDK.'''
 
     def _applytag(self, tracer, str_tag, byte_tag):
@@ -378,29 +378,90 @@ class SDK(object):
                                            self._nsdk.trace_in_process_link(link_bytes))
 
     def set_diagnostic_callback(self, callback):
-        '''Sets a callback to be informed of unusual events.
+        '''Sets the agent warning callback function.
 
-        Unusual events include:
+         The agent warning callback is called whenever one of the following
+         happens while executing an SDK function:
 
-        - API usage errors.
-        - Other unexpected events (like out of memory situations) that prevented
+        - An SDK usage error is detected or
+        - An unexpected or unusual event (e.g. out of memory) prevented
           an operation from completing successfully.
+
+        The application must not call any SDK functions from the callback.
+
+        There is no default warning callback.
+        It is recommended you set one for development and debugging,
+        as this is the main way the SDK reports errors.
 
         .. warning:: Use this as a development and debugging aid only. Your application should not
             rely on a calling sequence or any message content being set or passed to the callback.
 
+        .. seealso:: :meth:`set_verbose_callback` is a method you
+            can call additionally to get more messages.
+
         :param callable callback: The callback function. Receives the (unicode)
             error message as its only argument.
         '''
-        self._nsdk.agent_set_logging_callback(callback)
+        result = self._nsdk.agent_set_warning_callback(callback)
+        if result != ErrorCode.SUCCESS:
+            logger.error(
+                "Could not set warning callback: Error %d: %s",
+                result, self._nsdk.strerror(result))
+
+    def set_verbose_callback(self, callback):
+        '''Sets the verbose agent logging callback function.
+
+        Similar to :meth:`set_diagnostic_callback` but the callback supplied
+        here will not be called with warning messages but with additional
+        messages that may e.g. explain why a PurePath was not created even if
+        the reason is (usually) benign.
+
+        .. note:: It usually does not make sense to set this callback without also using
+            :meth:`set_diagnostic_callback` in addition.
+
+
+        .. warning:: This callback can receive lots and lots of messages.
+            You should not usually use it in production.
+
+        :param callable callback: The callback function. Receives the (unicode)
+            error message as its only argument.
+
+        .. versionadded:: 1.4.0
+        '''
+        result = self._nsdk.agent_set_verbose_callback(callback)
+        if result != ErrorCode.SUCCESS:
+            logger.error(
+                "Could not set verbose callback: Error %d: %s",
+                result, self._nsdk.strerror(result))
+
 
     @property
     def agent_state(self):
         '''Returns the current agent state (one of the constants in
         :class:`oneagent.common.AgentState`).
 
+        .. warning:: Even though this is a property,
+           accessing it may modify the agent's fork state
+           (see :class:`~oneagent.common.AgentForkState` and :meth:`.agent_fork_state`)
+           when :func:`oneagent.initialize` was called with :code:`forkable=True`.
+
         :rtype: int'''
         return self._nsdk.agent_get_current_state()
+
+    @property
+    def agent_fork_state(self):
+        '''Returns the current agent fork state  (one of the constants in
+        :class:`oneagent.common.AgentForkState`).
+
+        This is only relevant if :func:`oneagent.initialize` was called with :code:`forkable=True`.
+
+        Calling this function only has a defined result when :meth:`.agent_state` is
+        equal to :attr:`oneagent.common.AgentState.ACTIVE`
+        or :attr:`oneagent.common.AgentState.TEMPORARILY_INACTIVE`.
+
+        :rtype: int
+        '''
+        return self._nsdk.agent_get_fork_state()
 
     @property
     def agent_version_string(self):

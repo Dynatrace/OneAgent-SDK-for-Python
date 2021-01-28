@@ -18,6 +18,7 @@ from __future__ import print_function
 import os
 from os import path
 import inspect
+import warnings
 import pytest
 
 import oneagent
@@ -100,7 +101,9 @@ def argstr(func):
     if spec.args and spec.args[0] == 'self':
         #pylint:disable=no-member,protected-access
         spec = spec._replace(args=spec.args[1:])
-    return inspect.formatargspec(*spec, formatarg=lambda arg: 'arg')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        return inspect.formatargspec(*spec, formatarg=lambda arg: 'arg')
 
 def check_sdk_iface(csdkinst, actual):
     cnames = pubnames(csdkinst)

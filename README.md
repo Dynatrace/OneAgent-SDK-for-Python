@@ -58,10 +58,15 @@ Dynatrace OneAgent version (it is the same as
 
 |OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status     |
 |:----------------------|:---------------------|:-----------------|:------------------|
+|1.4                    |1.6.1                 |≥1.179            |Supported          |
 |1.3                    |1.5.1                 |≥1.179            |Supported          |
-|1.2                    |1.4.1                 |≥1.161            |Supported          |
-|1.1                    |1.3.1                 |≥1.151            |Supported          |
+|1.2                    |1.4.1                 |≥1.161            |Deprecated¹        |
+|1.1                    |1.3.1                 |≥1.151            |Deprecated¹        |
 |1.0                    |1.1.0                 |≥1.141            |EAP (not supported)|
+
+> 1. *Deprecated* releases of the OneAgent SDK for Python are still supported but this
+> might change with a future release. Applications using those deprecated versions should
+> be upgraded to the latest release.
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -157,11 +162,15 @@ Unusual events that prevent an operation from completing successfully include:
 > **NOTE**: Use this as a development and debugging aid only. Your application should not rely on a calling sequence or any message content being set
 or passed to the callback.
 
+During development, it is additionally recommended to use the "verbose callback" which also informs about other events that may be benign
+but can be very helpful in debugging, e.g. a PurePath that was not created because a Tracer is disabled by configuration, etc.
+
 ```python
 def _diag_callback(unicode_message):
 	print(unicode_message)
 
 sdk.set_diagnostic_callback(_diag_callback)
+sdk.set_verbose_callback(_diag_callback) # Do not use this callback in production
 ```
 
 
@@ -569,7 +578,18 @@ For more information on forked child processes, take a look at those resources:
 To debug your OneAgent SDK for Python installation, execute the following Python code:
 
 ```python
+import logging
+import time
 import oneagent
+
+log_handler = logging.StreamHandler()
+log_formatter = logging.Formatter(
+    '%(asctime)s.%(msecs)03d UTC [%(thread)08x]'
+    ' %(levelname)-7s [%(name)-6s] %(message)s',
+    '%Y-%m-%d %H:%M:%S')
+log_formatter.converter = time.gmtime
+log_handler.setFormatter(log_formatter)
+oneagent.logger.addHandler(log_handler)
 oneagent.logger.setLevel(1)
 init_result = oneagent.initialize(['loglevelsdk=finest', 'loglevel=finest'])
 print('InitResult=' + repr(init_result))
@@ -613,7 +633,6 @@ Known gotchas:
   directory, your platform is not supported. Otherwise, regardless if it works with that method or not, please report an issue as described
   in [Let us help you](#let-us-help-you).
 
-
 <a name="extended-sdk-state"></a>
 ### Extended SDK State
 
@@ -633,7 +652,12 @@ print('Agent is compatible:', oneagent.get_sdk().agent_is_compatible)
 # OneAgent SDK for C/C++ version separated by a '/'.
 print('Agent version:', oneagent.get_sdk().agent_version_string)
 ```
+<a name="shutdown-crashes"></a>
+### Shutdown crashes
 
+If your are experiencing crashes when your application exits, make
+sure the you uninitialized the SDK properly by calling its `shutdown`
+function.
 
 <a name="repository-contents"></a>
 ## Repository contents
@@ -695,13 +719,28 @@ SLAs don't apply for GitHub tickets.
 
 SLAs apply according to the customer's support level.
 
-
 <a name="release-notes"></a>
 ## Release notes
 
-Please see the [GitHub releases page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases),
-and the [PyPI release history](https://pypi.org/project/oneagent-sdk/#history).
+### Version 1.4.0
 
+* Don't look for agent module in `PATH/LD_LIBRARY_PATH/..`. and
+disallow a relative path in the `DT_HOME` directory on Windows to prevent DLL hijacking issues.
+
+* Fixed a bug that might lead to crashes in the SDK's shutdown phase
+
+* Support for **Python versions < 3.5** is deprecated. The OneAgent SDK for Python
+will still work with this release, but this might change in the future.
+
+* Following versions of the **OneAgent SDK for Python** are considered deprecated
+and might not be supported in the future. Applications using it should be upgraded to the latest release.
+  * [Version 1.1.0](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.1.0)
+  * [Version 1.2.0](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.2.0)
+  * [Version 1.2.1](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.2.1)
+
+> For older versions of the OneAgent SDK for Python, please see
+the [GitHub releases page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases),
+and the [PyPI release history](https://pypi.org/project/oneagent-sdk/#history).
 
 <a name="license"></a>
 ## License

@@ -32,6 +32,8 @@ try: # Python 2 compatibility.
 except NameError:
     pass
 
+IN_DEV_ENVIRONMENT = True # Let's assume we are *not* in production here...
+
 getsdk = oneagent.get_sdk # Just to make the code shorter.
 
 def traced_db_operation(dbinfo, sql):
@@ -269,8 +271,13 @@ def main():
         # oneagent.get_sdk() instead of calling the function multiple times.
         sdk = getsdk()
 
-        # Set the diagnostic callback.
+        # Set the diagnostic callback. Strongly recommended.
         sdk.set_diagnostic_callback(_diag_callback)
+
+        # Set the verbose callback.
+        # Not recommended in production as lots of messages can be emitted.
+        if IN_DEV_ENVIRONMENT:
+            sdk.set_verbose_callback(_diag_callback)
 
         # The agent state is one of the integers in oneagent.sdk.AgentState.
         print('Agent state:', sdk.agent_state)

@@ -84,15 +84,35 @@ from threading import Lock
 from oneagent._impl.six.moves import range #pylint:disable=import-error
 from oneagent.version import __version__
 
-from .common import SDKError, SDKInitializationError, ErrorCode, _ONESDK_INIT_FLAG_FORKABLE
+from .common import (
+    SDKError, SDKInitializationError, ErrorCode,
+    _ONESDK_INIT_FLAG_FORKABLE, _add_enum_helpers)
 from ._impl.native import nativeagent
 from ._impl.native.nativeagent import try_get_sdk
 from ._impl.native.sdknulliface import SDKNullInterface
 from ._impl.native.sdkdllinfo import WIN32
 
+if hasattr(sys, 'implementation'):
+    def _get_py_edition():
+        return sys.implementation.name # pylint:disable=no-member
+else:
+    import platform
+
+    def _get_py_edition():
+        return platform.python_implementation()
+
 logger = logging.getLogger('py_sdk')
 logger.setLevel(logging.CRITICAL + 1) # Disabled by default
 
+_PROCESS_TECH_PYTHON = 28
+_PROCESS_TECH_ONEAGENT_SDK = 118
+
+def _get_py_version():
+    return '.'.join(map(str, sys.version_info[:3])) + (
+        '' if sys.version_info.releaselevel == "final"
+        else sys.version_info.releaselevel + str(sys.version_info.serial))
+
+@_add_enum_helpers
 class InitResult(namedtuple('InitResult', 'status error')):
     __slots__ = ()
 
@@ -103,6 +123,10 @@ class InitResult(namedtuple('InitResult', 'status error')):
     STATUS_ALREADY_INITIALIZED = 2
 
     __nonzero__ = __bool__ = lambda self: self.status >= 0
+
+    def __repr__(self):
+        return "InitResult(status={}, error={!r})".format(
+            self._value_name(self.status), self.error) #pylint:disable=no-member
 
 
 _sdk_ref_lk = Lock()
@@ -186,8 +210,9 @@ def initialize(sdkopts=(), sdklibname=None, forkable=False):
     * :meth:`oneagent.sdk.SDK.agent_version_string` works as expected.
     * :meth:`oneagent.sdk.SDK.agent_state` will return
         :data:`oneagent.common.AgentState.TEMPORARILY_INACTIVE` - but see the note below.
-    * :meth:`oneagent.sdk.SDK.set_diagnostic_callback` works as expected, the callback will be
-        carried over to forked child processes.
+    * :meth:`oneagent.sdk.SDK.set_diagnostic_callback` and
+      :meth:`oneagent.sdk.SDK.set_verbose_callback` work as expected,
+      the callback will be  carried over to forked child processes.
     * It is recommended you call :func:`shutdown` when the original process will not fork any more
         children that want to use the SDK.
 
@@ -248,8 +273,8 @@ def _try_init_noref(sdkopts=(), sdklibname=None, forkable=False):
 
     try:
         logger.info(
-            'Initializing SDK with options=%s, libname=%s.',
-            sdkopts, sdklibname)
+            'Initializing SDK on Python=%s with options=%s, libname=%s.',
+            (sys.version or '?').replace('\n', '  ').replace('\r', ''), sdkopts, sdklibname)
         sdk = nativeagent.initialize(sdklibname)
 
         have_warning = False
@@ -270,7 +295,11 @@ def _try_init_noref(sdkopts=(), sdklibname=None, forkable=False):
 
         nativeagent.checkresult(sdk, sdk.initialize(flags), 'onesdk_initialize_2')
         _should_shutdown = True
-        logger.debug("initialize successful")
+        logger.debug('initialize successful, adding tech types...')
+        sdk.ex_agent_add_process_technology(_PROCESS_TECH_ONEAGENT_SDK, 'Python', __version__)
+        sdk.ex_agent_add_process_technology(
+            _PROCESS_TECH_PYTHON, _get_py_edition(), _get_py_version())
+        logger.debug('tech type reporting complete')
         return InitResult(
             (InitResult.STATUS_INITIALIZED_WITH_WARNING if have_warning else
              InitResult.STATUS_INITIALIZED),
@@ -280,7 +309,7 @@ def _try_init_noref(sdkopts=(), sdklibname=None, forkable=False):
         #pylint:disable=no-member
         if isinstance(e, SDKError) and e.code == ErrorCode.AGENT_NOT_ACTIVE:
         #pylint:enable=no-member
-            logger.debug("initialized, but agent not active")
+            logger.debug('initialized, but agent not active')
             return InitResult(InitResult.STATUS_INITIALIZED_WITH_WARNING, e)
         logger.exception('Failed initializing agent.')
         sdk = nativeagent.try_get_sdk()
