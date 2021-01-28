@@ -725,7 +725,7 @@ SLAs apply according to the customer's support level.
 ### Version 1.4.0
 
 * Don't look for agent module in `PATH/LD_LIBRARY_PATH/..`. and
-disallow relative a `DT_HOME` directory on Windows to prevent DLL hijacking issues.
+disallow a relative path in the `DT_HOME` directory on Windows to prevent DLL hijacking issues.
 
 * Fixed a bug that might lead to crashes in the SDK's shutdown phase
 
