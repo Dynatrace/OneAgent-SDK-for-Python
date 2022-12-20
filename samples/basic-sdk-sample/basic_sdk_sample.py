@@ -219,7 +219,12 @@ def mock_process_incoming_message():
             # the tracer ends.
             tracer.set_vendor_message_id('message_id')
             with tracer:
-                print('handle incoming message')
+
+                # Use tracecontext_get_current to log a trace/span ID identifiying the current node.
+                tinfo = sdk.tracecontext_get_current()
+                print('[!dt dt.trace_id={},dt.span_id={}] handle incoming message'.format(
+                    tinfo.trace_id, tinfo.span_id))
+
                 tracer.set_correlation_id('correlation_id')
 
 def mock_outgoing_message():

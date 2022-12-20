@@ -21,12 +21,12 @@ from oneagent._impl.native.sdkversion import OnesdkStubVersion
 # That's the OneAgent SDK for Python version.
 # See https://www.python.org/dev/peps/pep-0440/ "Version Identification and
 # Dependency Specification"
-__version__ = '1.4.0'
+__version__ = '1.5.0'
 
 # Define the OneAgent SDK for C/C++ version which should be shipped with this
 # Python SDK version.
-shipped_c_stub_version = '1.6.1'
+shipped_c_stub_version = '1.7.1'
 
 # Below are the minimum and maximum required/supported OneAgent SDK for C/C++ versions.
-min_stub_version = OnesdkStubVersion(1, 6, 1)
+min_stub_version = OnesdkStubVersion(1, 7, 1)
 max_stub_version = OnesdkStubVersion(2, 0, 0)

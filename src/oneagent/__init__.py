@@ -242,7 +242,7 @@ def initialize(sdkopts=(), sdklibname=None, forkable=False):
         Python SDK version.
     :param bool forkable: Use the SDK in 'forkable' mode.
 
-    :rtype: .InitResult
+    :rtype: InitResult
     '''
 
     global _sdk_ref_count #pylint:disable=global-statement

@@ -120,3 +120,6 @@ Note these points:
 * You should take care that obtaining the incoming tag is not an expensive
   operation, as it can not be accounted for in the timings of the resulting
   path.
+* Both the string and byte tag are returned as a :class:`bytes` object
+  (:code:`str` bytestring in Python 2).
+  This is due to an oversight that cannot be fixed anymore without breaking compatibility.

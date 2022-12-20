@@ -41,6 +41,9 @@ CCSID_UTF8 = 1209
 CCSID_UTF16_BE = 1201
 CCSID_UTF16_LE = 1203
 
+_ONESDK_TRACE_ID_BUFFER_SIZE = 33
+_ONESDK_SPAN_ID_BUFFER_SIZE = 17
+
 bool_t = ctypes.c_int32
 result_t = ctypes.c_uint32 if WIN32 else ctypes.c_int32
 xchar_p = ctypes.c_wchar_p if WIN32 else ctypes.c_char_p
@@ -503,6 +506,8 @@ class SDKDllInterface(object):
 
         self._init_custom_service()
 
+        self._init_trace_context()
+
 
     def _init_custom_service(self):
         initfn = self._initfn
@@ -565,6 +570,15 @@ class SDKDllInterface(object):
             'incomingmessageprocesstracer_set_correlation_id_p',
             (handle_t, CCStringPInArg),
             None).__doc__ = '(tracer_handle, correlation_id)'
+
+    def _init_trace_context(self):
+        initfn = self._initfn
+        initfn(
+            'tracecontext_get_current',
+            (ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p, ctypes.c_size_t,),
+            result_t,
+            public=False)
+
 
 
     def initialize(self, init_flags=0):
@@ -760,6 +774,14 @@ class SDKDllInterface(object):
             return buf.raw
         assert cnt + 1 == tagsz.value
         return buf.value
+
+    def tracecontext_get_current(self):
+        trace_id_buf = ctypes.create_string_buffer(b'0' * (_ONESDK_TRACE_ID_BUFFER_SIZE - 1))
+        span_id_buf = ctypes.create_string_buffer(b'0' * (_ONESDK_SPAN_ID_BUFFER_SIZE - 1))
+        result = self._tracecontext_get_current(
+            trace_id_buf, len(trace_id_buf), span_id_buf, len(span_id_buf))
+        return result, u8_to_str(trace_id_buf.value), u8_to_str(span_id_buf.value)
+
 
     def tracer_set_incoming_byte_tag(self, tracer, tag):
         self._tracer_set_incoming_dynatrace_byte_tag(tracer, tag, len(tag))
