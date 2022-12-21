@@ -640,3 +640,23 @@ class SDK(object): # pylint:disable=too-many-public-methods
         '''
         return tracers.CustomServiceTracer(
             self._nsdk, self._nsdk.customservicetracer_create(service_method, service_name))
+
+    def tracecontext_get_current(self):
+        ''' Retrieves the current W3C trace context's span and trace ID.
+
+            This function always returns a :class:`.TraceContextInfo` object (never None).
+            Check :attr:`.TraceContextInfo.is_valid` if you need to determine whether a valid
+            trace/span ID is available, but this should not usually be necessary because
+            an all-zero span/trace ID of the right length is still returned.
+
+            If you need to find out why the trace/span ID is zero, use the usual mechanism,
+            i.e. :meth:`.set_verbose_callback` and :meth:`.set_diagnostic_callback`.
+            The most common cause is that there is no tracer currently active.
+        '''
+
+        result_code, trace_id, span_id = self._nsdk.tracecontext_get_current()
+
+        # Note: We discard error information here, the interesting cases should be covered by
+        # the diagnostic/verbose callback. In difficult cases, calling through to
+        # the raw _nsdk method might be a way to get more error information.
+        return TraceContextInfo(result_code == ErrorCode.SUCCESS, trace_id, span_id)

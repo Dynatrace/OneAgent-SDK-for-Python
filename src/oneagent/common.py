@@ -44,7 +44,6 @@ DYNATRACE_MESSAGE_PROPERTYNAME = DYNATRACE_MESSAGE_PROPERTY_NAME
 
 #: Allow SDK to be used in forked child processes.
 _ONESDK_INIT_FLAG_FORKABLE = 1
-
 class _Uninstantiable(object):
     '''Classes deriving from this class cannot be instantiated.'''
 
@@ -142,6 +141,9 @@ class ErrorCode(_Uninstantiable):
     #: The operation failed because this is the child process of a fork that
     #: occurred while the SDK was initialized.
     FORK_CHILD = _ERROR_BASE + 13
+
+    #: The operation completed without error, but there was no data to return.
+    NO_DATA = _ERROR_BASE + 14
 
 class AgentForkState(_Uninstantiable):
     '''Constants for the agent's fork state. See
@@ -401,3 +403,41 @@ class MessagingSystemInfoHandle(SDKHandleBase):
         :meth:`oneagent.sdk.SDK.create_messaging_system_info`.'''
     def close_handle(self, nsdk, handle):
         nsdk.messagingsysteminfo_delete(handle)
+
+class TraceContextInfo(object):
+    '''Provides information about a PurePath node using the TraceContext
+        (Trace-Id, Span-Id) model as defined in https://www.w3.org/TR/trace-context.
+
+        The Span-Id represents the currently active PurePath node (tracer).
+        This Trace-Id and Span-Id information is not intended for tagging and context-propagation
+        scenarios and primarily designed for log-enrichment use cases.
+
+        Note that contrary to other info objects, no manual cleanup (delete calls or similar)
+        are required (or possible) for this class.
+        '''
+
+    #: All-zero (invalid) W3C trace ID.
+    INVALID_TRACE_ID = "00000000000000000000000000000000"
+
+    #: All-zero (invalid) W3C span ID.
+    INVALID_SPAN_ID = "0000000000000000"
+
+    def __init__(self, is_valid, trace_id, span_id):
+        #: If true, the trace & span ID are both valid (i.e., non-zero).
+        #: As an alternative to this property, you can check the truth value of the
+        #: :class:`TraceContextInfo` instance.
+        self.is_valid = is_valid # type: bool
+
+        #: The W3C trace ID hex string (never empty or None, but might be all-zero)
+        self.trace_id = trace_id # type: str
+
+        #: The W3C span ID hex string (never empty or None, but might be all-zero)
+        self.span_id = span_id # type: str
+
+    def __bool__(self):
+        return self.is_valid
+
+    __nonzero__ = __bool__
+
+    def __str__(self):
+        return self.trace_id + "-" + self.span_id

@@ -1,5 +1,10 @@
 *.pyc
 *.pyo
+*.lib
+*.pdb
+*.so
+*.a
+*.launch
 build/
 __pycache__/
 onesdk_shared.dll
@@ -10,7 +15,13 @@ dist/
 /tmp/
 *.egg-info
 .pytest_cache/
+venv/
+.venv/
+.tox/
+.vscode
+*.whl
+db.sqlite3
+/.checkstyle
 /.project
 /.pydevproject
-/.README.md.html
-/.settings
+.settings/

@@ -24,14 +24,17 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
   * [Messaging](#messaging)
     + [Outgoing Messages](#outgoing-messages)
     + [Incoming Messages](#incoming-messages)
+- [W3C trace context](#w3c-trace-context)
 - [Using the OneAgent SDK for Python with forked child processes (only available on Linux)](#using-the-oneagent-sdk-for-python-with-forked-child-processes-only-available-on-linux)
 - [Troubleshooting](#troubleshooting)
   * [Extended SDK State](#extended-sdk-state)
+  * [Shutdown crashes](#shutdown-crashes)
 - [Repository contents](#repository-contents)
 - [Help & Support](#help--support)
   * [Read the manual](#read-the-manual)
   * [Let us help you](#let-us-help-you)
 - [Release notes](#release-notes)
+  * [Version 1.5.0](#version-150)
 - [License](#license)
 
 <!-- tocstop -->
@@ -39,11 +42,20 @@ This SDK enables Dynatrace customers to extend request level visibility into Pyt
 <a name="requirements"></a>
 ## Requirements
 
-The SDK supports Python 2 ≥ 2.7 and Python 3 ≥ 3.4. Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
+The latest release of the SDK supports Python 3 only, see below for exact support status of Python versions.
+
+Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
 from <https://python.org>) is supported and only on Linux (musl libc which is used, e.g., on Alpine Linux, is currently not supported)
 and Windows with the x86 (including x86-64) architecture.
-Additionally, `pip` ≥ 8.1.0 (2016-03-05) is required for installation, and on Linux, the system should be
-[`manylinux1`-compatible](https://www.python.org/dev/peps/pep-0513/) to ensure a smooth installation via `pip`.
+It is always advised to use the latest patch version of your minor versoin of Python, as these usually contain security
+fixes and other important bugfixes.
+
+Additionally, `pip` with the `wheel` and `setuptools` package installed is required for installation,
+and on Linux, the system needs to be [`manylinux1`-compatible](https://www.python.org/dev/peps/pep-0513/).
+`pip` versions before 8.1.0 are known not to work, but generally it is advised to always use the latest pip version.
+Due to factors such as changes in package hosting by PyPI and Python itself,
+Dynatrace cannot guarantee that SDK installation is, or will continue to be,
+possible with old pip versions.
 
 The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C)
 and therefore the SDK for C/C++ is required and delivered with the Python SDK. See
@@ -56,17 +68,34 @@ Dynatrace OneAgent version (it is the same as
 
 <a name="pycversiontab"></a>
 
-|OneAgent SDK for Python|OneAgent SDK for C/C++|Dynatrace OneAgent|Support status     |
-|:----------------------|:---------------------|:-----------------|:------------------|
-|1.4                    |1.6.1                 |≥1.179            |Supported          |
-|1.3                    |1.5.1                 |≥1.179            |Supported          |
-|1.2                    |1.4.1                 |≥1.161            |Deprecated¹        |
-|1.1                    |1.3.1                 |≥1.151            |Deprecated¹        |
-|1.0                    |1.1.0                 |≥1.141            |EAP (not supported)|
+|OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python|Support status |
+|:----------------------|:-----------------------------|:----------------|:--------------|:--------------|
+|1.5                    |1.7.1                         |≥1.251           |≥3.5           |Supported|
+|1.4                    |1.6.1                         |≥1.179           |2.7.x or ≥3.4  |Supported|
+|1.3                    |1.5.1                         |≥1.179           |2.7.x or ≥3.4  |Deprecated with support ending 2023-07-01|
+|1.2                    |1.4.1                         |≥1.161           |2.7.x or ≥3.4  |Deprecated with support ending 2023-07-01|
+|1.1                    |1.3.1                         |≥1.151           |2.7.x or ≥3.4  |Deprecated with support ending 2023-07-01|
+|1.0                    |1.1.0                         |≥1.141           |2.7.x or ≥3.4  |Deprecated with support ending 2023-07-01|
 
-> 1. *Deprecated* releases of the OneAgent SDK for Python are still supported but this
-> might change with a future release. Applications using those deprecated versions should
-> be upgraded to the latest release.
+Note that this table only states the support status of the mentioned OneAgent SDK for Python version
+with the included OneAgent SDK for C/C++, not the OneAgent itself.
+
+The "required Python" column indicates the Python versions with which the SDK version was developed and tested.
+We may additionally announce deprecations for older versions of Python in combination with specific or all versions of the SDK,
+meaning that we will no longer provide support for these combinations after the given date, even if the SDK version itself
+is supported and technically running on that Python version.
+We also strongly advise against using Python versions that are no longer supported by your Python vendor.
+
+We intend to deprecate Python versions effective around 6 months after the Python project stops supporting them as documented by the
+Python project: <https://devguide.python.org/versions/>. We will announce every deprecation explicitly, usually 6 months before
+it becomes effective.
+
+<a name="pysupporttab"></a>
+
+| Python version | Deprecation status |
+|:---------------|:---------------|
+| 3.4.x-3.6.x    | Deprecation announcement with exact date pending, *not before* 2023-07-01 |
+| 2.7.x          | Deprecated with support (with compatible SDK versions) ending 2023-07-01 |
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -79,6 +108,8 @@ To install the latest version of the OneAgent SDK for Python, use the PyPI packa
 ```bash
 python -m pip install --upgrade oneagent-sdk
 ```
+
+`pip`, `setuptools` and `wheel` need to be installed and should be up to date before running this command.
 
 To verify your installation, execute
 
@@ -218,6 +249,7 @@ A more detailed specification of the features can be found in [Dynatrace OneAgen
 
 |Feature                                   |Required OneAgent SDK for Python version|
 |:-----------------------------------------|:--------|
+|W3C trace context for log enrichment      |≥1.5.0   |
 |Custom services                           |≥1.2.0   |
 |Messaging                                 |≥1.2.0   |
 |In-process linking                        |≥1.1.0   |
@@ -546,6 +578,35 @@ See the documentation for more information:
 * [General information on tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
 * [Messaging tracers in the specification repository](https://github.com/Dynatrace/OneAgent-SDK#messaging)
 
+<a name="w3c-trace-context"></a>
+## W3C trace context
+
+This feature allows you to retrieve a W3C TraceContext trace ID and span ID referencing the current PurePath node,
+as defined in <https://www.w3.org/TR/trace-context>.
+
+This trace ID and span ID information is not intended for tagging and
+context-propagation scenarios and primarily designed for log-enrichment use
+cases. Refer to [General information on tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
+for tagging traces (see also the usage examples elsewhere in this document).
+
+The following example shows how to print the current trace & span ID to stdout
+in a format that works well with Dynatrace Log Monitoring
+(see <https://www.dynatrace.com/support/help/shortlink/log-monitoring-log-enrichment> for more):
+
+```python
+with sdk.trace_custom_service('onTimer', 'CleanupTask'): # Or any other tracer
+	tinfo = sdk.tracecontext_get_current()
+	print('[!dt dt.trace_id={},dt.span_id={}] handle incoming message'.format(tinfo.trace_id, tinfo.span_id))
+```
+
+See the documentation for more information:
+
+* [`tracecontext_get_current`](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.SDK.tracecontext_get_current)
+* [Information on trace tagging](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/tagging.html)
+* [W3C trace context in the SDK specification repository](https://github.com/Dynatrace/OneAgent-SDK#tracecontext)
+
+
+
 <a name="forking"></a>
 <a name="using-the-oneagent-sdk-for-python-with-forked-child-processes-only-available-on-linux"></a>
 ## Using the OneAgent SDK for Python with forked child processes (only available on Linux)
@@ -708,7 +769,6 @@ Make sure your issue is not already solved in the [available documentation](#doc
 
 **Open a [GitHub issue](https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues) to:**
   * Report minor defects or typos.
-  * Ask for improvements or changes in the SDK API.
   * Ask any questions related to the community effort.
 
 SLAs don't apply for GitHub tickets.
@@ -722,25 +782,20 @@ SLAs apply according to the customer's support level.
 <a name="release-notes"></a>
 ## Release notes
 
-### Version 1.4.0
+### Version 1.5.0
 
-* Don't look for agent module in `PATH/LD_LIBRARY_PATH/..`. and
-disallow a relative path in the `DT_HOME` directory on Windows to prevent DLL hijacking issues.
+Changes:
 
-* Fixed a bug that might lead to crashes in the SDK's shutdown phase
+* Adds limited [W3C trace context](#w3c-trace-context) support (for log enrichment).
+* This version **no longer supports Python 2 (Python 2.7.x)**.
+* This version **no longer supports Python 3.4.x**.
 
-* Support for **Python versions < 3.5** is deprecated. The OneAgent SDK for Python
-will still work with this release, but this might change in the future.
+Announcements:
 
-* Following versions of the **OneAgent SDK for Python** are considered deprecated
-and might not be supported in the future. Applications using it should be upgraded to the latest release.
-  * [Version 1.1.0](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.1.0)
-  * [Version 1.2.0](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.2.0)
-  * [Version 1.2.1](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases/tag/v1.2.1)
+* ⚠️ **Deprecation announcement for older SDK versions:** Version 1.3 and all older versions have been put on the path to deprecation and will no longer be supported starting July 1, 2023. We strongly advise customers to upgrade to newest versions to avoid incompatibility and security risks. Customers need to upgrade to at least 1.4 but are encouraged to upgrade to the newest available version (1.5) if using Python >3.4 as there are no known incompatibilities or breaking changes other than the increased minimum Python version.
+* ⚠️ **Deprecation announcement for using any SDK version with older Python versions:** Python 2.7.x has been put on the path to deprecation and no version of the SDK will be supported on this Python version starting July 1, 2023. Furthermore, we intend to release a similar deprecation announcement regarding versions 3.4-3.6 (which are no longer maintained by the Python project) soon (we plan that this will not become effective before 2023-07-01).
 
-> For older versions of the OneAgent SDK for Python, please see
-the [GitHub releases page](https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases),
-and the [PyPI release history](https://pypi.org/project/oneagent-sdk/#history).
+See <https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases> for older releases.
 
 <a name="license"></a>
 ## License

@@ -209,9 +209,9 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
         pass
 
     def tracer_get_outgoing_tag(self, tracer_h, use_byte_tag=False):
-        if use_byte_tag:
-            return six.binary_type()
-        return six.text_type()
+        # This was originally meant to return a string for use_byte_tag=False
+        # but the real implementation doesn't do it that way.
+        return six.binary_type()
 
     def tracer_set_incoming_string_tag(self, tracer_h, tag):
         pass
@@ -281,3 +281,6 @@ class SDKNullInterface(object): #pylint:disable=too-many-public-methods
 
     def customservicetracer_create(self, service_method, service_name):
         return NULL_HANDLE
+
+    def tracecontext_get_current(self):
+        return (ErrorCode.NO_DATA, '00000000000000000000000000000000', '0000000000000000')

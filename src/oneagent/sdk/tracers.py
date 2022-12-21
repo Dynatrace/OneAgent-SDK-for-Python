@@ -35,16 +35,23 @@ class OutgoingTaggable(object):
 
     @property
     def outgoing_dynatrace_string_tag(self):
-        '''Get a string tag (:class:`str` on Python 3, :class:`unicode` on
-        Python 2) identifying the node of this tracer. Must be called between
-        starting and ending the tracer (i.e., while it is started).'''
+        '''Get a ASCII string tag (as :class:`bytes` on Python 3, :code:`str`
+        on Python 2) identifying the node of this tracer. Must be called between
+        starting and ending the tracer (i.e., while it is started).
+
+        .. warning:: This method was originally meant to return a :class:`unicode` object on
+            Python 2 and a :class:`str` on Python 3 and was documented as such until version 1.4.
+            However, it has always been returning bytes only. Use :code:`.decode('utf-8')`
+            (:meth:`bytes.decode`) if you need an actual string.
+        '''
         return self.nsdk.tracer_get_outgoing_tag(self.handle, False)
 
     @property
     def outgoing_dynatrace_byte_tag(self):
         '''Get a :class:`bytes` tag identifying the node of this tracer. Must be
         called between starting and ending the tracer (i.e., while it is
-        started).'''
+        started).
+        '''
         return self.nsdk.tracer_get_outgoing_tag(self.handle, True)
 
 class Tracer(object):

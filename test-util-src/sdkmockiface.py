@@ -294,7 +294,7 @@ def _entry_field(func):
 def _strcheck(val, optional=False):
     if optional and val is None:
         return
-    if not isinstance(val, six.string_types):
+    if not isinstance(val, (six.text_type, six.binary_type)):
         raise TypeError('Expected a string type but got {}({})'.format(
             type(val), val))
     if not optional and not val.strip():
@@ -640,7 +640,7 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
         _livecheck(tracer_h, TracerHandle, TracerHandle.STARTED)
         if use_byte_tag:
             return tracer_h.out_tag
-        return base64.b64encode(tracer_h.out_tag).decode('ASCII')
+        return base64.b64encode(tracer_h.out_tag)
 
     @_entry_field
     def tracer_set_incoming_string_tag(self, tracer_h, tag):
@@ -742,3 +742,6 @@ class SDKMockInterface(object): #pylint:disable=too-many-public-methods
         handle.service_method = service_method
         handle.service_name = service_name
         return handle
+
+    def tracecontext_get_current(self):
+        return (ErrorCode.AGENT_NOT_ACTIVE, '00000000000000000000000000000000', '0000000000000000')
