@@ -23,7 +23,9 @@ from oneagent import InitResult
 from oneagent.common import AgentState
 
 @pytest.mark.dependsnative
-@pytest.mark.skipif('DT_OLDAGENTLIBRARY' not in os.environ, reason="See OA-8673, EP-918")
+@pytest.mark.skipif(
+    'DT_OLDAGENTLIBRARY' not in os.environ,
+    reason="No easy way to download these very old agent versions")
 def test_load_old_agent():
     saved_path = os.environ.get('DT_AGENTLIBRARY', '')
     try:
