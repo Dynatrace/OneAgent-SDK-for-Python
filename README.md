@@ -66,6 +66,9 @@ The version of the SDK for C/C++ that is included in each version of the SDK for
 Dynatrace OneAgent version (it is the same as
 [listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
 
+> Note: The OneAgent SDK is not supported on serverless code modules, including those for AWS Lambda.
+> Consider using [OpenTelemetry](https://www.dynatrace.com/support/help/shortlink/opentel-lambda) instead in these scenarios.
+
 <a name="pycversiontab"></a>
 
 |OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python|Support status |
