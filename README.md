@@ -720,7 +720,7 @@ print('Agent version:', oneagent.get_sdk().agent_version_string)
 ### Shutdown crashes
 
 If your are experiencing crashes when your application exits, make
-sure the you uninitialized the SDK properly by calling its `shutdown`
+sure you uninitialized the SDK properly by calling its `shutdown`
 function.
 
 <a name="repository-contents"></a>
