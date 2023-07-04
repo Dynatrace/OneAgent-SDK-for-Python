@@ -222,6 +222,23 @@ exception message (if you do not want or need this behavior, tracers have
 explicit methods for starting, ending and attaching error information too; see the
 [documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.Tracer)).
 
+A Tracer instance can only be used from the thread on which it was created.
+Whenever you start a tracer, the tracer becomes a child of the previously active tracer
+on this thread and the new tracer then becomes the active tracer. You may only end the active tracer.
+If you do, the tracer that was active before it (its parent) becomes active again.
+Put another way, tracers must be ended in reverse order of starting them
+(you can think of this being like HTML tags where you must also close the child tag before you can close the parent tag).
+While the tracer's automatic parent-child relationship works very intuitively in most cases,
+it does not work with **asynchronous patterns**, where the same thread handles multiple logically
+separate operations in an interleaved way on the same thread. If you need to instrument
+such patterns with the SDK, you need to end your tracer before the thread is potentially reused
+by any other operation (e.g., before yielding to the event loop). To later continue the trace,
+capture an in-process link before and later resume using the in-process link tracer, as explained in
+[Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution). This approach is rather awkward and
+may lead to complex and difficult to interpret traces. If your application makes extensive use of
+asynchronous patterns of the kind that is difficult to instrument with the SDK, consider using
+the [OpenTelemetry support of Dynatrace](https://www.dynatrace.com/support/help/shortlink/opent-python) instead.
+
 There are different tracer types requiring different information for creation.
 As an example, to trace an incoming remote call, this would be the most simple
 way to trace it:
