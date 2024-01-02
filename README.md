@@ -102,7 +102,7 @@ it becomes effective.
 
 | Python version | Deprecation status |
 |:---------------|:---------------|
-| Any later 3.x  |🟢 Supported unless announced otherwise. Pre-releases are not supported. |
+| Any later 3.x  |🟢 Supported unless announced otherwise. Pre-releases are not supported. At the moment, the SDK does not work on Python 3.12+, see [issue #32](https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues/32).  |
 | 3.8.x          |🟢 Supported. Expected to be deprecated with support ending around May 2025 |
 | 3.7.x          |⚠️ Deprecated with SDK support ending 2024-09-01; Declared EOL by Python.org |
 | 3.4.x-3.6.x    |⚠️ Deprecated with SDK support (with compatible SDK versions) ending 2024-06-01; Declared EOL by Python.org |
