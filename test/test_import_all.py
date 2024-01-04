@@ -18,7 +18,6 @@ from __future__ import print_function
 import os
 from os import path
 import inspect
-import warnings
 import pytest
 
 import oneagent
@@ -96,14 +95,19 @@ def argstr(func):
         func = func.__wrapped__
     #pylint:disable=deprecated-method
     if not inspect.ismethod(func) and not inspect.isfunction(func):
-        return '({})'.format(', '.join(len(func.argtypes) * ['arg']))
-    spec = getfullargspec(func)
-    if spec.args and spec.args[0] == 'self':
+        return '({})'.format(', '.join('_arg' + str(i) for i in range(len(func.argtypes))))
+    sig = inspect.signature(func)
+    iparams = iter(sig.parameters)
+    if sig.parameters and next(iparams) == 'self':
         #pylint:disable=no-member,protected-access
-        spec = spec._replace(args=spec.args[1:])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        return inspect.formatargspec(*spec, formatarg=lambda arg: 'arg')
+        sig = sig.replace(parameters=[sig.parameters[k] for k in iparams])
+    nparams = []
+    for i, param in enumerate(sig.parameters.values()):
+        if param.kind != inspect.Parameter.KEYWORD_ONLY:
+            param = param.replace(name="_arg" + str(i))
+        nparams.append(param)
+
+    return str(sig.replace(parameters=nparams))
 
 def check_sdk_iface(csdkinst, actual):
     cnames = pubnames(csdkinst)

@@ -38,6 +38,7 @@ and make sure you are reading the [latest version of this document](https://gith
   * [Let us help you](#let-us-help-you)
 - [Release notes and announcements](#release-notes-and-announcements)
   * [Announcements in November 2023](#announcements-in-november-2023)
+  * [Version 1.5.1](#version-151)
   * [Version 1.5.0](#version-150)
 - [License](#license)
 
@@ -75,14 +76,14 @@ Dynatrace OneAgent version (it is the same as
 
 <a name="pycversiontab"></a>
 
-|OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python|Support status |
-|:----------------------|:-----------------------------|:----------------|:--------------|:--------------|
-|1.5                    |1.7.1                         |≥1.251           |≥3.5           |🟢 Supported|
-|1.4                    |1.6.1                         |≥1.179           |≥3.4*          |ℹ️ Deprecated with support ending 2024-06-01|
-|1.3                    |1.5.1                         |≥1.179           |2.7.x or ≥3.4  |❌ Unsupported since 2023-07-01|
-|1.2                    |1.4.1                         |≥1.161           |2.7.x or ≥3.4  |❌ Unsupported since 2023-07-01|
-|1.1                    |1.3.1                         |≥1.151           |2.7.x or ≥3.4  |❌ Unsupported since 2023-07-01|
-|1.0                    |1.1.0                         |≥1.141           |2.7.x or ≥3.4  |❌ Unsupported since 2023-07-01|
+|OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python       |Support status |
+|:----------------------|:-----------------------------|:----------------|:---------------------|:--------------|
+|1.5.x                  |1.7.1                         |≥1.251           |≥3.5                  |🟢 Supported|
+|1.4.x                  |1.6.1                         |≥1.179           |3.4.x-3.11.x          |ℹ️ Deprecated with support ending 2024-06-01|
+|1.3.x                  |1.5.1                         |≥1.179           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.2.x                  |1.4.1                         |≥1.161           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.1.x                  |1.3.1                         |≥1.151           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.0.x                  |1.1.0                         |≥1.141           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
 
 Note that this table only states the support status of the mentioned OneAgent SDK for Python version
 with the included OneAgent SDK for C/C++, not the OneAgent itself.
@@ -102,7 +103,7 @@ it becomes effective.
 
 | Python version | Deprecation status |
 |:---------------|:---------------|
-| Any later 3.x  |🟢 Supported unless announced otherwise. Pre-releases are not supported. At the moment, the SDK does not work on Python 3.12+, see [issue #32](https://github.com/Dynatrace/OneAgent-SDK-for-Python/issues/32).  |
+| Any later 3.x  |🟢 Supported unless announced otherwise. Pre-releases are not supported. |
 | 3.8.x          |🟢 Supported. Expected to be deprecated with support ending around May 2025 |
 | 3.7.x          |⚠️ Deprecated with SDK support ending 2024-09-01; Declared EOL by Python.org |
 | 3.4.x-3.6.x    |⚠️ Deprecated with SDK support (with compatible SDK versions) ending 2024-06-01; Declared EOL by Python.org |
@@ -815,12 +816,19 @@ SLAs apply according to the customer's support level.
 For additional updates, see also [OneAgent release notes](https://docs.dynatrace.com/docs/shortlink/release-notes-oneagent)
 and [End of support announcements](https://docs.dynatrace.com/docs/shortlink/eos-announcements#dynatrace-oneagent).
 
+
 ### Announcements in November 2023
 
 * ⚠️ **Deprecation announcement for older SDK versions:** Version 1.4 has been put on the path to deprecation and will no longer be supported starting June 1, 2024. Only version 1.5 of the SDK (or any newer version) will be supported from that date on.
 * ⚠️ **Deprecation announcement for using any SDK version with older Python versions:** SDK support for Python 3.4.x, 3.5.x, 3.6.x and 3.7.x has been put on the path to deprecation and no version of the SDK will be supported on Python 3.4.x, 3.5.x and 3.6.x starting June 1, 2024.
   Usage of the SDK on 3.7.x will remain supported until September 1, 2024.
   All Python versions below 3.8.x are already declared End of Life by the Python.org project, and customers are encouraged to upgrade to a newer Python version that is also supported by Python.org.
+
+### Version 1.5.1
+
+Changes:
+
+* Fixes support of Python 3.12 and newer
 
 ### Version 1.5.0
 
