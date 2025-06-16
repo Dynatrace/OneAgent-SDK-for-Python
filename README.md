@@ -12,6 +12,10 @@ and make sure you are reading the [latest version of this document](https://gith
 <!-- toc -->
 
 - [Requirements](#requirements)
+  * [Python version requirements](#python-version-requirements)
+  * [Choosing a SDK implementation](#choosing-a-sdk-implementation)
+  * [Requirements for Python SDK with OneAgent SDK for C/C++](#requirements-for-python-sdk-with-oneagent-sdk-for-cc)
+  * [Requirements for Python SDK with OneAgent Python code module](#requirements-for-python-sdk-with-oneagent-python-code-module)
 - [Using the OneAgent SDK for Python in your application](#using-the-oneagent-sdk-for-python-in-your-application)
 - [API Concepts](#api-concepts)
   * [Initialization and SDK objects](#initialization-and-sdk-objects)
@@ -39,7 +43,6 @@ and make sure you are reading the [latest version of this document](https://gith
 - [Release notes and announcements](#release-notes-and-announcements)
   * [Announcements in November 2023](#announcements-in-november-2023)
   * [Version 1.5.1](#version-151)
-  * [Version 1.5.0](#version-150)
 - [License](#license)
 
 <!-- tocstop -->
@@ -50,50 +53,19 @@ and make sure you are reading the [latest version of this document](https://gith
 The latest release of the SDK supports Python 3 only, see below for exact support status of Python versions.
 
 Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
-from <https://python.org>) is supported and only on Linux (musl libc which is used, e.g., on Alpine Linux, is currently not supported)
-and Windows with the x86 (including x86-64) architecture.
-It is always advised to use the latest patch version of your minor versoin of Python, as these usually contain security
-fixes and other important bugfixes.
+from <https://python.org>) is supported. It is always advised to use the latest patch version
+of your minor versoin of Python, as these usually contain security fixes and other important bugfixes.
 
-Additionally, `pip` with the `wheel` and `setuptools` package installed is required for installation,
-and on Linux, the system needs to be [`manylinux1`-compatible](https://www.python.org/dev/peps/pep-0513/).
+Additionally, `pip` with the `wheel` and `setuptools` package installed is required for installation.
 `pip` versions before 8.1.0 are known not to work, but generally it is advised to always use the latest pip version.
 Due to factors such as changes in package hosting by PyPI and Python itself,
 Dynatrace cannot guarantee that SDK installation is, or will continue to be,
 possible with old pip versions.
 
-The Dynatrace OneAgent SDK for Python is a wrapper of the [Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C)
-and therefore the SDK for C/C++ is required and delivered with the Python SDK. See
-[here](https://github.com/Dynatrace/OneAgent-SDK-for-C#requirements)
-for its requirements, which also apply to the SDK for Python.
-
-The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table along with the required
-Dynatrace OneAgent version (it is the same as
-[listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
-
 > Note: The OneAgent SDK is not supported on serverless code modules, including those for AWS Lambda.
 > Consider using [OpenTelemetry](https://www.dynatrace.com/support/help/shortlink/opentel-lambda) instead in these scenarios.
 
-<a name="pycversiontab"></a>
-
-|OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python       |Support status |
-|:----------------------|:-----------------------------|:----------------|:---------------------|:--------------|
-|1.5.x                  |1.7.1                         |≥1.251           |≥3.5                  |🟢 Supported|
-|1.4.x                  |1.6.1                         |≥1.179           |3.4.x-3.11.x          |ℹ️ Deprecated with support ending 2024-06-01|
-|1.3.x                  |1.5.1                         |≥1.179           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
-|1.2.x                  |1.4.1                         |≥1.161           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
-|1.1.x                  |1.3.1                         |≥1.151           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
-|1.0.x                  |1.1.0                         |≥1.141           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
-
-Note that this table only states the support status of the mentioned OneAgent SDK for Python version
-with the included OneAgent SDK for C/C++, not the OneAgent itself.
-
-The "required Python" column indicates the Python versions with which the SDK version was developed and tested (where marked with *,
-the minimum version has been updated to adjust for Python deprecations from the table below).
-We may additionally announce deprecations for older versions of Python in combination with specific or all versions of the SDK,
-meaning that we will no longer provide support for these combinations after the given date, even if the SDK version itself
-is supported and technically running on that Python version.
-We also strongly advise against using Python versions that are no longer supported by your Python vendor.
+### Python version requirements
 
 We intend to deprecate Python versions effective around 6 months after the Python project stops supporting them as documented by the
 Python project: <https://devguide.python.org/versions/>. We will announce every deprecation explicitly, usually 6 months before
@@ -103,12 +75,82 @@ it becomes effective.
 
 | Python version | Deprecation status |
 |:---------------|:---------------|
-| Any later 3.x  |🟢 Supported unless announced otherwise. Pre-releases are not supported. |
-| 3.8.x          |🟢 Supported. Expected to be deprecated with support ending around May 2025 |
-| 3.7.x          |⚠️ Deprecated with SDK support ending 2024-09-01; Declared EOL by Python.org |
-| 3.4.x-3.6.x    |⚠️ Deprecated with SDK support (with compatible SDK versions) ending 2024-06-01; Declared EOL by Python.org |
-| 2.7.x          |❌ Unsuspported since 2023-07-01 |
+| 3.9.x and newer|🟢 Supported unless announced otherwise. Pre-releases are not supported. |
+| 3.8.x          |🟢 Supported but expect deprecation announcement. Python version declared EOL by Python.org |
+| 3.7.x          |❌ Unsupported since 2024-09-01 |
+| 3.4.x-3.6.x    |❌ Unsupported since 2024-06-01 |
+| 2.7.x          |❌ Unsupported since 2023-07-01 |
 
+
+### Choosing a SDK implementation
+
+The SDK is supported with two different implementations which have different additional requirements,
+described in the following sections.
+Both implementations use the same package and are installed the same way, the implementation
+is selected later at runtime when the SDK is initialized.
+
+The implementation where the Python SDK acts as a wrapper around the OneAgent SDK for C/C++ is
+used if the OneAgent code module for Python is not injected.
+
+The other implementation directly works together with the OneAgent code module for Python. The SDK automatically
+switches to it if the OneAgent code module for Python is installed and injected into the process (injection needs
+to be manually configured, see Python code module documentation).
+
+<a name=requirements-c></a>
+
+### Requirements for Python SDK with OneAgent SDK for C/C++
+
+With this implementation, the Dynatrace OneAgent SDK for Python is a wrapper of the
+[Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C)
+and therefore the SDK for C/C++ is required and delivered with the Python SDK. See
+[here](https://github.com/Dynatrace/OneAgent-SDK-for-C#requirements)
+for its requirements, which also apply to the SDK for Python.
+
+Using the Python SDK with the OneAgent SDK for C/C++ is supported on Linux and Windows.
+Only the x86 (including x86-64) architecture is supported.
+For Linux, the system needs to be [`manylinux1`-compatible](https://www.python.org/dev/peps/pep-0513/)
+(musl libc which is used, e.g., on Alpine Linux, is not supported).
+
+The version of the SDK for C/C++ that is included in each version of the SDK for Python is shown in the following table along with the required
+Dynatrace OneAgent version (it is the same as
+[listed in the OneAgent SDK for C/C++'s documentation](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#compatibility-of-dynatrace-oneagent-sdk-for-cc-releases-with-oneagent-releases)).
+
+
+<a name="pycversiontab"></a>
+
+|OneAgent SDK for Python|Bundled OneAgent SDK for C/C++|Required OneAgent|Required Python       |Support status |
+|:----------------------|:-----------------------------|:----------------|:---------------------|:--------------|
+|1.5.x                  |1.7.1                         |≥1.251 (C/C++)   |3.8 or newer          |🟢 Supported|
+|1.4.x                  |1.6.1                         |≥1.179           |3.4.x-3.11.x          |❌ Unsupported since 2024-06-01|
+|1.3.x                  |1.5.1                         |≥1.179           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.2.x                  |1.4.1                         |≥1.161           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.1.x                  |1.3.1                         |≥1.151           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+|1.0.x                  |1.1.0                         |≥1.141           |2.7.x or 3.4.x-3.11.x |❌ Unsupported since 2023-07-01|
+
+Note that this table only states the support status of the mentioned OneAgent SDK for Python version
+with the included OneAgent SDK for C/C++, not the OneAgent itself.
+
+The "Required Python" column indicates the Python versions with which the SDK version was developed and tested.
+We may additionally announce deprecations for older versions of Python in combination with specific or all versions of the SDK,
+meaning that we will no longer provide support for these combinations after the given date, even if the SDK version itself
+is supported and technically running on that Python version.
+We also strongly advise against using Python versions that are no longer supported by your Python vendor.
+
+<a name=requirements-pythonagent></a>
+
+### Requirements for Python SDK with OneAgent Python code module
+
+With this implementation, the OneAgent SDK for Python can be used on all
+platforms where the [OneAgent code module for Python](https://docs.dynatrace.com/docs/shortlink/python) is
+[supported](https://docs.dynatrace.com/docs/shortlink/section-technology-support#python).
+
+Note that there are some platforms (e.g. ARM Linux) that are only supported with the Python code module but not
+the C/C++ SDK and also the other way round, some platforms that only support the Python SDK with C/C++ SDK (e.g. Windows).
+
+Other SDK-specific requirements (e.g. Python version, pip installations) still apply when using it with the Python code module.
+
+Be aware that to collect data in this mode, the corresponding OneAgent features for the Python SDK need to be enabled
+(they were not needed for and have no effect on the SDK implementation based on the OneAgent SDK for C/C++).
 
 <a name="#using-the-oneagent-sdk-for-python-in-your-application"></a>
 ## Using the OneAgent SDK for Python in your application
@@ -232,23 +274,6 @@ exception message (if you do not want or need this behavior, tracers have
 explicit methods for starting, ending and attaching error information too; see the
 [documentation](https://dynatrace.github.io/OneAgent-SDK-for-Python/docs/sdkref.html#oneagent.sdk.tracers.Tracer)).
 
-A Tracer instance can only be used from the thread on which it was created.
-Whenever you start a tracer, the tracer becomes a child of the previously active tracer
-on this thread and the new tracer then becomes the active tracer. You may only end the active tracer.
-If you do, the tracer that was active before it (its parent) becomes active again.
-Put another way, tracers must be ended in reverse order of starting them
-(you can think of this being like HTML tags where you must also close the child tag before you can close the parent tag).
-While the tracer's automatic parent-child relationship works very intuitively in most cases,
-it does not work with **asynchronous patterns**, where the same thread handles multiple logically
-separate operations in an interleaved way on the same thread. If you need to instrument
-such patterns with the SDK, you need to end your tracer before the thread is potentially reused
-by any other operation (e.g., before yielding to the event loop). To later continue the trace,
-capture an in-process link before and later resume using the in-process link tracer, as explained in
-[Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution). This approach is rather awkward and
-may lead to complex and difficult to interpret traces. If your application makes extensive use of
-asynchronous patterns of the kind that is difficult to instrument with the SDK, consider using
-the [OpenTelemetry support of Dynatrace](https://www.dynatrace.com/support/help/shortlink/opent-python) instead.
-
 There are different tracer types requiring different information for creation.
 As an example, to trace an incoming remote call, this would be the most simple
 way to trace it:
@@ -264,8 +289,30 @@ See the section on [remote calls](#remote-calls) for more information.
 
 Some tracers also support attaching additional information before ending it.
 
-**Important:** In Python 2, tracers accept both byte (“normal”) and unicode
-strings. Byte strings must always use the UTF-8 encoding!
+Whenever you start a tracer, the tracer becomes a child of the previously active tracer
+and the new tracer then becomes the active tracer. You may only end the active tracer.
+If you do, the tracer that was active before it (its parent) becomes active again.
+Put another way, tracers must be ended in reverse order of starting them
+(you can think of this being like HTML tags where you must also close the child tag before you can close the parent tag).
+
+The SDK behaves differently in an important aspect depending on whether it is used with the Python code module or the
+OneAgent SDK for C/C++:
+
+* With the OneAgent code module for Python, the current tracer is "context-local", i.e. works as expected with both multithreading
+  and `asyncio` by using Python's [contextvars](https://docs.python.org/3/library/contextvars.html) module.
+* With the OneAgent SDK for C/C++, a Tracer instance can only be used from the thread on which it was created.
+  In this way, the SDK supports multithreading but it has no awareness of any other (async) context.
+
+  This means, the SDK does not work with **asynchronous patterns**, where the same thread handles multiple logically
+  separate operations in an interleaved way on the same thread (e.g. an event loop). If you need to instrument
+  such patterns with the SDK without the Python code module, you need to end your tracer before the thread is potentially reused
+  by any other operation (e.g., before yielding to the event loop). To later continue the trace,
+  capture an in-process link before and later resume using the in-process link tracer, as explained in
+  [Trace in-process asynchronous execution](#trace-in-process-asynchronous-execution). This approach is rather awkward and
+  may lead to complex and difficult to interpret traces. If your application makes extensive use of
+  asynchronous patterns of the kind that is difficult to instrument with the SDK and needs to run on platforms not
+  supported by the Python code module, consider using the
+  [OpenTelemetry support of Dynatrace](https://www.dynatrace.com/support/help/shortlink/opent-python) instead.
 
 
 <a name="features-and-how-to-use-them"></a>
@@ -649,7 +696,7 @@ The recommended way to use the Python SDK in such a scenario is as follows: You 
 the `forkable` argument to `True`.
 
 ```python
-oneagent.initialize(sdk_options, forkable=True)
+oneagent.initialize(forkable=True)
 ```
 
 This way you will not be able to use the SDK in the master process (attempts to do so will be ignored, if applicable with
@@ -659,6 +706,13 @@ startup of worker processes is not slowed down, and the per-worker memory overhe
 For more information on forked child processes, take a look at those resources:
 * [Documentation on forking for the Dynatrace OneAgent SDK for C/C++](https://github.com/Dynatrace/OneAgent-SDK-for-C/blob/master/README.md#forking)
 * [Forking sample application](./samples/fork-sdk-sample/fork_sdk_sample.py)
+* [Python documentation for cautions about forking](https://docs.python.org/3/c-api/init.html#cautions-about-fork)
+
+When the SDK is used with the Python code module, `initialize` arguments are ignored. This is because the Python code module already
+initializes at process startup. Since the Python code module features an improved always-on forkable mode that allows monitoring all
+parent and child processes, code that works with the OneAgent SDK for C/C++-based implementation will continue to work without changes.
+A behavioral change does occur if you were using `forkable=False` (the default) but still used the SDK in forked child processes.
+In that case, the SDK would previously be disabled in child processes but when injecting the Python code module, they will produce data.
 
 <a name="troubleshooting"></a>
 ## Troubleshooting
@@ -666,7 +720,12 @@ For more information on forked child processes, take a look at those resources:
 <a name="installation-issues"></a>
 <a name="post-installation-issues"></a>
 
-To debug your OneAgent SDK for Python installation, execute the following Python code:
+To debug your OneAgent SDK for Python installation, temporarily (e.g. in your current shell) set the following environment variables,
+
+* DT_LOGLEVELSDK=finest
+* DT_LOGLEVEL=finest
+
+then execute the following Python code:
 
 ```python
 import logging
@@ -682,12 +741,14 @@ log_formatter.converter = time.gmtime
 log_handler.setFormatter(log_formatter)
 oneagent.logger.addHandler(log_handler)
 oneagent.logger.setLevel(1)
-init_result = oneagent.initialize(['loglevelsdk=finest', 'loglevel=finest'])
+init_result = oneagent.initialize()
 print('InitResult=' + repr(init_result))
 ```
 
-If you get output containing `InitResult=InitResult(status=0, error=None)`, your installation should be fine. Otherwise, the output is helpful in
-determining the issue. The [extended SKD state](#extended-sdk-state) might also help to diagnose your problem.
+If you get output containing `InitResult=InitResult(status=0, error=None)`, your installation should be fine. Otherwise, the output and [agent logs][]
+are helpful in determining the issue. The [extended SKD state](#extended-sdk-state) might also help to diagnose your problem.
+
+[agent logs]: https://docs.dynatrace.com/docs/shortlink/oneagent-diagnostics
 
 Known gotchas:
 
@@ -696,7 +757,14 @@ Known gotchas:
   Make sure that the `pip install` or equivalent succeeded (see [here](#installation)). Also make sure you use the `pip` corresponding to your
   `python` (if in doubt, use `python -m pip` instead of `pip` for installing).
 
-* Output ending in a message like `InitResult=InitResult(status=-2, error=SDKError(-1342308345, 'Failed loading SDK stub from .../site-packages/oneagent/_impl/native/libonesdk_shared.so: "/.../libonesdk_shared.so: cannot open shared object file: No such file or directory". Check your installation of the oneagent-sdk Python package, e.g., try running `pip install --verbose --force-reinstall oneagent-sdk`.'))`.
+* Output ending in a message like `InitResult=InitResult(status=-2, error=SDKError(-1342308345, 'Failed loading SDK stub from .../site-packages/oneagent/_impl/native/libonesdk_shared.so: "/.../libonesdk_shared.so: cannot open shared object file: No such file or directory"))`.
+
+  If you want to use the SDK with the Python code module, make sure the agent is injected into the process
+  and check the [agent logs][] for any error message related to the SDK. Make sure you are using a compatible SDK version.
+
+  Otherwise, i.e. for using the SDK with the OneAgent SDK for C/C++:
+
+  Check your installation of the oneagent-sdk Python package, e.g., try running `pip install --verbose --force-reinstall oneagent-sdk`.
 
   Follow the advice of the message and run `python -m pip install --verbose --force-reinstall oneagent-sdk`
   (or the equivalent pip invocation with the `--verbose` and `--force-reinstall` flags).
@@ -741,6 +809,9 @@ print('Agent is compatible:', oneagent.get_sdk().agent_is_compatible)
 
 # The agent version is a string holding both the OneAgent version and the
 # OneAgent SDK for C/C++ version separated by a '/'.
+# When used with the OneAgent code module for Python, there is no real C/C++ SDK version, so
+# a pseudo version is substituted instead for that part.
+# It will always be higher than the actually bundled SDK version.
 print('Agent version:', oneagent.get_sdk().agent_version_string)
 ```
 <a name="shutdown-crashes"></a>
@@ -774,6 +845,9 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
 **Support policy**
 
 The Dynatrace OneAgent SDK for Python has GA status. The features are fully supported by Dynatrace.
+
+When using the OneAgent SDK for Python with the OneAgent code module for Python, any differing support status
+of the Python code module also applies.
 
 For detailed support policy see [Dynatrace OneAgent SDK help](https://github.com/Dynatrace/OneAgent-SDK#help).
 
@@ -829,19 +903,6 @@ and [End of support announcements](https://docs.dynatrace.com/docs/shortlink/eos
 Changes:
 
 * Fixes support of Python 3.12 and newer
-
-### Version 1.5.0
-
-Changes:
-
-* Adds limited [W3C trace context](#w3c-trace-context) support (for log enrichment).
-* This version **no longer supports Python 2 (Python 2.7.x)**.
-* This version **no longer supports Python 3.4.x**.
-
-Announcements:
-
-* ⚠️ **Deprecation announcement for older SDK versions:** Version 1.3 and all older versions have been put on the path to deprecation and will no longer be supported starting July 1, 2023. We strongly advise customers to upgrade to newest versions to avoid incompatibility and security risks. Customers need to upgrade to at least 1.4 but are encouraged to upgrade to the newest available version (1.5) if using Python >3.4 as there are no known incompatibilities or breaking changes other than the increased minimum Python version.
-* ⚠️ **Deprecation announcement for using any SDK version with older Python versions:** Python 2.7.x has been put on the path to deprecation and no version of the SDK will be supported on this Python version starting July 1, 2023. Furthermore, we intend to release a similar deprecation announcement regarding versions 3.4-3.6 (which are no longer maintained by the Python project) soon (we plan that this will not become effective before 2023-07-01).
 
 See <https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases> for older releases.
 
