@@ -54,7 +54,7 @@ The latest release of the SDK supports Python 3 only, see below for exact suppor
 
 Only the official CPython (that is, the "normal" Python, i.e. the Python implementation
 from <https://python.org>) is supported. It is always advised to use the latest patch version
-of your minor versoin of Python, as these usually contain security fixes and other important bugfixes.
+of your minor version of Python, as these usually contain security fixes and other important bugfixes.
 
 Additionally, `pip` with the `wheel` and `setuptools` package installed is required for installation.
 `pip` versions before 8.1.0 are known not to work, but generally it is advised to always use the latest pip version.
