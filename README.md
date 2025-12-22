@@ -41,8 +41,7 @@ and make sure you are reading the [latest version of this document](https://gith
   * [Read the manual](#read-the-manual)
   * [Let us help you](#let-us-help-you)
 - [Release notes and announcements](#release-notes-and-announcements)
-  * [Announcements in November 2023](#announcements-in-november-2023)
-  * [Version 1.5.1](#version-151)
+  * [Version 1.5.2](#version-152)
 - [License](#license)
 
 <!-- tocstop -->
@@ -834,7 +833,7 @@ If you are viewing the [GitHub repository](https://github.com/Dynatrace/OneAgent
   [here](#documentation).
 - `tests/`, `test-util-src/`: Contains tests and test support files that are
   useful (only) for developers wanting to contribute to the SDK itself.
-- `setup.py`, `setup.cfg`, `MANIFEST.in`, `project.toml`: Development files
+- `setup.py`, `setup.cfg`, `MANIFEST.in`, `pyproject.toml`: Development files
   required for creating e.g. the PyPI package for the Python OneAgent SDK.
 - `tox.ini`, `pylintrc`: Supporting files for developing the SDK itself. See
   <https://tox.readthedocs.io/en/latest/> and <https://www.pylint.org/>.
@@ -890,19 +889,14 @@ SLAs apply according to the customer's support level.
 For additional updates, see also [OneAgent release notes](https://docs.dynatrace.com/docs/shortlink/release-notes-oneagent)
 and [End of support announcements](https://docs.dynatrace.com/docs/shortlink/eos-announcements#dynatrace-oneagent).
 
+### Version 1.5.2
 
-### Announcements in November 2023
-
-* ⚠️ **Deprecation announcement for older SDK versions:** Version 1.4 has been put on the path to deprecation and will no longer be supported starting June 1, 2024. Only version 1.5 of the SDK (or any newer version) will be supported from that date on.
-* ⚠️ **Deprecation announcement for using any SDK version with older Python versions:** SDK support for Python 3.4.x, 3.5.x, 3.6.x and 3.7.x has been put on the path to deprecation and no version of the SDK will be supported on Python 3.4.x, 3.5.x and 3.6.x starting June 1, 2024.
-  Usage of the SDK on 3.7.x will remain supported until September 1, 2024.
-  All Python versions below 3.8.x are already declared End of Life by the Python.org project, and customers are encouraged to upgrade to a newer Python version that is also supported by Python.org.
-
-### Version 1.5.1
+This is a bugfix release that only includes packaging changes, if the package is already installed and working, there is no immediate reason to upgrade.
 
 Changes:
-
-* Fixes support of Python 3.12 and newer
+* Fixes installation using uv 0.9.16 or newer on musl/Alpine platforms (this only allows installing the SDK stub without C/C++-SDK-based implementation)
+* Removes hard dependency on `pkg_resources`, which should allow installation with `setuptools>=81`.
+* Fixes filename of `pyproject.toml` to prevent potential issues with outdated or missing `setuptools`.
 
 See <https://github.com/Dynatrace/OneAgent-SDK-for-Python/releases> for older releases.
 

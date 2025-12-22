@@ -39,9 +39,6 @@ from setuptools import setup, find_packages, Distribution
 from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
 
-from pkg_resources import parse_version
-
-
 try:
     from wheel.bdist_wheel import bdist_wheel
 except ImportError:
@@ -96,10 +93,15 @@ __version__ = get_version_from_pkg_info()
 if not __version__:
     __version__ = get_version_from_version_py()
 
-if __version__ != str(parse_version(__version__)):
-    raise AssertionError(
-        'Version {} normalizes to {}'.format(
-            __version__, parse_version(__version__)))
+try:
+    from pkg_resources import parse_version
+except ImportError:
+    pass
+else:
+    if __version__ != str(parse_version(__version__)):
+        raise AssertionError(
+            'Version {} normalizes to {}'.format(
+                __version__, parse_version(__version__)))
 
 # This function was adapted from https://www.python.org/dev/peps/pep-0513/
 # (public domain)
@@ -136,7 +138,8 @@ def unsupported_msg(plat_name):
     if glibc_ver:
         glibc = '\nGNU libc version:     ' + glibc_ver + '\n'
     elif os.name != 'nt':
-        glibc = '\nNot using GNU libc. Note that musl libc is not supported.\n'
+        glibc = ('\nNot using GNU libc. Note that musl libc is not supported' +
+                 ' using OneAgent SDK for C/C++ implementation.\n')
     else:
         glibc = ''
 
@@ -166,25 +169,8 @@ def compilefile(fname, mode='exec'):
         codestr = srcfile.read()
     return compile(codestr, fname, mode)
 
-def adjust_plat_name(self):
-    #pylint:disable=access-member-before-definition
-    if self.plat_name is not None:
-        return
-    baseplat = get_platform()
-    if baseplat.startswith('linux'):
-        platname = baseplat.split('-', 2)
-        platname[0] = 'manylinux1'
-        #pylint:disable=attribute-defined-outside-init
-        self.plat_name = '-'.join(platname)
-    else:
-        self.plat_name = baseplat
-
 if bdist_wheel is not None:
     class BdistWheel(bdist_wheel):
-        def finalize_options(self):
-            adjust_plat_name(self)
-            bdist_wheel.finalize_options(self)
-
         def get_tag(self):
             plat_name = self.plat_name or get_platform()
             plat_name = plat_name.replace('-', '_').replace('.', '_')
@@ -354,6 +340,9 @@ def main():
         package_dir={'': 'src'},
         include_package_data=True,
         zip_safe=True,
+        # Because we don't dare to change it in a bugfix release,
+        # this is claiming a wider range than we actually support.
+        # Should be ">=3.8", README.md is authoritative here.
         python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
         cmdclass=cmdclss,
         name='oneagent-sdk',
@@ -374,12 +363,7 @@ def main():
             'License :: OSI Approved',
             'License :: OSI Approved :: Apache Software License', # 2.0
             'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: Implementation :: CPython',
             #'Programming Language :: Python :: Implementation :: PyPy',
             'Operating System :: POSIX :: Linux',
